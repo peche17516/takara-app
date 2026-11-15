@@ -2,18 +2,17 @@
 # -*- coding: utf-8 -*-
 """
 全期間累積型・宝くじ当選番号自動収集スクリプト (fetch_lottery.py)
-【みずほ銀行 公式個別回号CSV（A100〜A104）直結・高速並列取得版】
+【みずほ銀行 公式CSV実測書式 100%完全準拠版】
 
-- みずほ銀行公式CSVエンドポイント:
-  - ナンバーズ3・4 : https://www.mizuhobank.co.jp/retail/takarakuji/numbers/csv/A100{回号:04d}.CSV
-  - ミニロト       : https://www.mizuhobank.co.jp/retail/takarakuji/loto/miniloto/csv/A101{回号:04d}.CSV
-  - ロト6          : https://www.mizuhobank.co.jp/retail/takarakuji/loto/loto6/csv/A102{回号:04d}.CSV
-  - ロト7          : https://www.mizuhobank.co.jp/retail/takarakuji/loto/loto7/csv/A103{回号:04d}.CSV
-  - ビンゴ5        : https://www.mizuhobank.co.jp/retail/takarakuji/bingo/bingo5/csv/A104{回号:04d}.CSV
-
-- 2分探索（バイナリサーチ）で現在の最新回号を瞬時に特定し、
-  未取得の回号（初回は第1回〜最新回までの全期間、2回目以降は最新の差分のみ）を
-  高速並列処理で取得して lottery_history.json に永久累積保存します。
+実測CSV書式:
+- ロト系/ビンゴ5:
+  A52 第2000回ロト６,数字選択式全国自治宝くじ,令和7年5月19日,東京 宝くじドリーム館
+  本数字,01,02,16,21,25,35,ボーナス数字,22
+  キャリーオーバー,1053097181円
+- ナンバーズ:
+  A50 第6700回ナンバーズ,数字選択式全国自治宝くじ,令和7年4月9日,東京 宝くじドリーム館
+  ナンバーズ３抽せん数字,046
+  ナンバーズ４抽せん数字,4013
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -22,6 +21,7 @@ import io
 import json
 import os
 import re
+import time
 from datetime import datetime
 import urllib.request
 
@@ -38,11 +38,19 @@ CSV_ENDPOINTS = {
 }
 
 SEARCH_BOUNDS = {
-    "numbers": (6400, 9500),
-    "miniloto": (1250, 2500),
-    "loto6": (1900, 3500),
-    "loto7": (550, 1500),
-    "bingo5": (370, 1200),
+    "numbers": (6600, 9500),
+    "miniloto": (1300, 2500),
+    "loto6": (1950, 3500),
+    "loto7": (600, 1500),
+    "bingo5": (400, 1200),
+}
+
+START_ROUNDS = {
+    "numbers": 1,
+    "miniloto": 1,
+    "loto6": 461,   # みずほ銀行個別CSVの開始回号
+    "loto7": 1,
+    "bingo5": 1,
 }
 
 
@@ -72,33 +80,38 @@ def load_existing_db():
     }
 
 
-def fetch_csv_text(url):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-            "Accept": "text/csv,text/plain,*/*",
-            "Referer": "https://www.mizuhobank.co.jp/retail/takarakuji/check/index.html",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            if resp.status != 200:
-                return None
-            raw = resp.read()
-            if not raw or len(raw) < 25:
-                return None
-            for enc in ("shift_jis", "cp932", "utf-8"):
-                try:
-                    txt = raw.decode(enc)
-                    if "第" in txt and "回" in txt:
-                        return txt
-                except UnicodeDecodeError:
+def fetch_csv_text(url, retries=2):
+    for attempt in range(retries + 1):
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+                "Accept": "text/csv,text/plain,*/*;q=0.8",
+                "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
+                "Referer": "https://www.mizuhobank.co.jp/retail/takarakuji/check/index.html",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status != 200:
                     continue
-            txt = raw.decode("utf-8", errors="ignore")
-            return txt if ("第" in txt and "回" in txt) else None
-    except Exception:
-        return None
+                raw = resp.read()
+                if not raw or len(raw) < 25:
+                    continue
+                for enc in ("shift_jis", "cp932", "utf-8"):
+                    try:
+                        txt = raw.decode(enc)
+                        if "第" in txt and "回" in txt:
+                            return txt
+                    except UnicodeDecodeError:
+                        continue
+                txt = raw.decode("utf-8", errors="ignore")
+                if "第" in txt and "回" in txt:
+                    return txt
+        except Exception:
+            if attempt < retries:
+                time.sleep(0.4)
+    return None
 
 
 def format_jp_date(y, m, d):
@@ -143,9 +156,8 @@ def find_latest_round(category):
         else:
             high = mid - 1
 
-    # 念のため少し先まで連番確認
     latest = low
-    for probe in range(latest + 1, latest + 5):
+    for probe in range(latest + 1, latest + 6):
         if fetch_csv_text(template.format(round=probe)) is not None:
             latest = probe
         else:
@@ -157,7 +169,7 @@ def parse_single_draw_csv(category, round_num, csv_text):
     rows = list(csv.reader(io.StringIO(csv_text)))
     date_formatted = None
 
-    for row in rows[:5]:
+    for row in rows[:6]:
         joined = ",".join(row)
         d = normalize_japanese_date(joined)
         if d:
@@ -171,27 +183,20 @@ def parse_single_draw_csv(category, round_num, csv_text):
         n3_nums = []
         n4_nums = []
         for row in rows:
-            joined = "".join(row)
-            if "ナンバーズ3" in joined or "ナンバーズ３" in joined:
+            joined = ",".join(row)
+            # 例: ナンバーズ３抽せん数字,046
+            if ("ナンバーズ３" in joined or "ナンバーズ3" in joined) and "抽せん数字" in joined:
                 for cell in row:
-                    digits = re.sub(r"[^\d]", "", cell)
-                    if len(digits) == 3 and "第" not in cell and "回" not in cell:
+                    digits = re.sub(r"[^\d]", "", cell.strip())
+                    if len(digits) == 3 and "第" not in cell:
                         n3_nums = [int(c) for c in digits]
                         break
-                if not n3_nums:
-                    single_digits = [int(c.strip()) for c in row if re.fullmatch(r"\d", c.strip())]
-                    if len(single_digits) >= 3:
-                        n3_nums = single_digits[:3]
-            elif "ナンバーズ4" in joined or "ナンバーズ４" in joined:
+            elif ("ナンバーズ４" in joined or "ナンバーズ4" in joined) and "抽せん数字" in joined:
                 for cell in row:
-                    digits = re.sub(r"[^\d]", "", cell)
-                    if len(digits) == 4 and "第" not in cell and "回" not in cell and len(digits) != 4 or (len(digits) == 4 and not digits.startswith("20") and not digits.startswith("19")):
+                    digits = re.sub(r"[^\d]", "", cell.strip())
+                    if len(digits) == 4 and "第" not in cell:
                         n4_nums = [int(c) for c in digits]
                         break
-                if not n4_nums:
-                    single_digits = [int(c.strip()) for c in row if re.fullmatch(r"\d", c.strip())]
-                    if len(single_digits) >= 4:
-                        n4_nums = single_digits[:4]
 
         out = {}
         if len(n3_nums) == 3:
@@ -201,6 +206,7 @@ def parse_single_draw_csv(category, round_num, csv_text):
         return out
 
     # ロト6・ロト7・ミニロト・ビンゴ5
+    # 実測CSV書式: 本数字,01,02,16,21,25,35,ボーナス数字,22
     main_nums = []
     bonus_nums = []
     carryover_yen = 0
@@ -208,19 +214,24 @@ def parse_single_draw_csv(category, round_num, csv_text):
     for row in rows:
         joined = ",".join(row)
         if "本数字" in joined or "抽せん数字" in joined:
+            mode = "none"
             for cell in row:
                 c = cell.strip()
-                if re.fullmatch(r"\d{1,2}", c):
+                if "本数字" in c or "抽せん数字" in c:
+                    mode = "main"
+                elif "ボーナス" in c:
+                    mode = "bonus"
+                elif re.fullmatch(r"\d{1,2}", c):
                     val = int(c)
-                    if 1 <= val <= 43:
+                    if mode == "main":
                         main_nums.append(val)
-        elif "ボーナス" in joined:
+                    elif mode == "bonus":
+                        bonus_nums.append(val)
+        elif "ボーナス" in joined and not bonus_nums:
             for cell in row:
                 c = cell.strip()
                 if re.fullmatch(r"\d{1,2}", c):
-                    val = int(c)
-                    if 1 <= val <= 43:
-                        bonus_nums.append(val)
+                    bonus_nums.append(int(c))
         elif "キャリーオーバー" in joined:
             for cell in row:
                 digits = re.sub(r"[^\d]", "", cell)
@@ -282,10 +293,11 @@ def main():
         else:
             existing_rounds = {x["round"] for x in db[cat]}
 
-        missing_rounds = [r for r in range(1, latest_round + 1) if r not in existing_rounds]
+        start_r = START_ROUNDS[cat]
+        missing_rounds = [r for r in range(start_r, latest_round + 1) if r not in existing_rounds]
         print(f"  -> 未取得回号: {len(missing_rounds)}件 を並列ダウンロード中...")
 
-        with ThreadPoolExecutor(max_workers=16) as executor:
+        with ThreadPoolExecutor(max_workers=12) as executor:
             futures = {executor.submit(fetch_and_parse_round, cat, r): r for r in missing_rounds}
             for fut in as_completed(futures):
                 res_map = fut.result()
