@@ -2,22 +2,14 @@
 # -*- coding: utf-8 -*-
 """
 全期間累積型・宝くじ当選番号自動収集スクリプト (fetch_lottery.py)
-【みずほ銀行 公式CSV実測書式 100%完全準拠版】
+【海外IPブロック回避・国内公開アーカイブ直結・全期間累積版】
 
-実測CSV書式:
-- ロト系/ビンゴ5:
-  A52 第2000回ロト６,数字選択式全国自治宝くじ,令和7年5月19日,東京 宝くじドリーム館
-  本数字,01,02,16,21,25,35,ボーナス数字,22
-  キャリーオーバー,1053097181円
-- ナンバーズ:
-  A50 第6700回ナンバーズ,数字選択式全国自治宝くじ,令和7年4月9日,東京 宝くじドリーム館
-  ナンバーズ３抽せん数字,046
-  ナンバーズ４抽せん数字,4013
+データソース:
+- ロト6 / ロト7 / ミニロト / ナンバーズ3 / ナンバーズ4: 楽天×宝くじ 公開アーカイブ（第1回〜最新回）
+- ビンゴ5: 数字選択式宝くじアーカイブ（第1回〜最新回）
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import csv
-import io
 import json
 import os
 import re
@@ -29,28 +21,42 @@ HISTORY_FILE = "lottery_history.json"
 LOTTERY_TYPES = ["numbers3", "numbers4", "miniloto", "loto6", "loto7", "bingo5"]
 WEEKDAYS_JP = ["月", "火", "水", "木", "金", "土", "日"]
 
-CSV_ENDPOINTS = {
-    "numbers": "https://www.mizuhobank.co.jp/retail/takarakuji/numbers/csv/A100{round:04d}.CSV",
-    "miniloto": "https://www.mizuhobank.co.jp/retail/takarakuji/loto/miniloto/csv/A101{round:04d}.CSV",
-    "loto6": "https://www.mizuhobank.co.jp/retail/takarakuji/loto/loto6/csv/A102{round:04d}.CSV",
-    "loto7": "https://www.mizuhobank.co.jp/retail/takarakuji/loto/loto7/csv/A103{round:04d}.CSV",
-    "bingo5": "https://www.mizuhobank.co.jp/retail/takarakuji/bingo/bingo5/csv/A104{round:04d}.CSV",
-}
-
-SEARCH_BOUNDS = {
-    "numbers": (6600, 9500),
-    "miniloto": (1300, 2500),
-    "loto6": (1950, 3500),
-    "loto7": (600, 1500),
-    "bingo5": (400, 1200),
-}
-
-START_ROUNDS = {
-    "numbers": 1,
-    "miniloto": 1,
-    "loto6": 461,   # みずほ銀行個別CSVの開始回号
-    "loto7": 1,
-    "bingo5": 1,
+RAKUTEN_CONFIG = {
+    "loto6": {
+        "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/loto6/",
+        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/loto6_past/",
+        "detail_pattern": r"/backnumber/loto6_detail/\d{4}-\d{4}/",
+        "main_count": 6,
+        "has_bonus": True,
+    },
+    "loto7": {
+        "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/loto7/",
+        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/loto7_past/",
+        "detail_pattern": r"/backnumber/loto7_detail/\d{4}-\d{4}/",
+        "main_count": 7,
+        "has_bonus": True,
+    },
+    "miniloto": {
+        "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/miniloto/",
+        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/miniloto_past/",
+        "detail_pattern": r"/backnumber/miniloto_detail/\d{4}-\d{4}/",
+        "main_count": 5,
+        "has_bonus": True,
+    },
+    "numbers3": {
+        "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers3/",
+        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers3_past/",
+        "detail_pattern": r"/backnumber/numbers3_detail/\d{4}-\d{4}/",
+        "main_count": 3,
+        "has_bonus": False,
+    },
+    "numbers4": {
+        "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers4/",
+        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers4_past/",
+        "detail_pattern": r"/backnumber/numbers4_detail/\d{4}-\d{4}/",
+        "main_count": 4,
+        "has_bonus": False,
+    },
 }
 
 
@@ -80,55 +86,36 @@ def load_existing_db():
     }
 
 
-def fetch_csv_text(url, retries=2):
+def fetch_html(url, retries=2):
     for attempt in range(retries + 1):
         req = urllib.request.Request(
             url,
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
-                "Accept": "text/csv,text/plain,*/*;q=0.8",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
-                "Referer": "https://www.mizuhobank.co.jp/retail/takarakuji/check/index.html",
             },
         )
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
+            with urllib.request.urlopen(req, timeout=20) as resp:
                 if resp.status != 200:
                     continue
                 raw = resp.read()
-                if not raw or len(raw) < 25:
-                    continue
-                for enc in ("shift_jis", "cp932", "utf-8"):
+                for enc in ("utf-8", "cp932", "shift_jis", "euc_jp"):
                     try:
-                        txt = raw.decode(enc)
-                        if "第" in txt and "回" in txt:
-                            return txt
+                        return raw.decode(enc)
                     except UnicodeDecodeError:
                         continue
-                txt = raw.decode("utf-8", errors="ignore")
-                if "第" in txt and "回" in txt:
-                    return txt
+                return raw.decode("utf-8", errors="ignore")
         except Exception:
             if attempt < retries:
-                time.sleep(0.4)
-    return None
+                time.sleep(0.5)
+    return ""
 
 
 def format_jp_date(y, m, d):
     dt = datetime(int(y), int(m), int(d))
     return f"{dt.year}/{dt.month:02d}/{dt.day:02d}({WEEKDAYS_JP[dt.weekday()]})"
-
-
-def normalize_japanese_date(text):
-    m = re.search(r"(\d{4})[/年.-](\d{1,2})[/月.-](\d{1,2})", text)
-    if m:
-        return format_jp_date(m.group(1), m.group(2), m.group(3))
-    m_jp = re.search(r"(令和|R|平成|H)\s*(\d{1,2})[/年.-](\d{1,2})[/月.-](\d{1,2})", text)
-    if m_jp:
-        era, ey, em, ed = m_jp.group(1), int(m_jp.group(2)), int(m_jp.group(3)), int(m_jp.group(4))
-        year = (2018 + ey) if era in ("令和", "R") else (1988 + ey)
-        return format_jp_date(year, em, ed)
-    return None
 
 
 def format_compact_yen(yen):
@@ -145,125 +132,178 @@ def format_exact_yen(yen):
     return f"{yen:,}円"
 
 
-def find_latest_round(category):
-    low, high = SEARCH_BOUNDS[category]
-    template = CSV_ENDPOINTS[category]
+def parse_rakuten_html(ltype, html_text):
+    if not html_text:
+        return []
 
-    while low < high:
-        mid = (low + high + 1) // 2
-        if fetch_csv_text(template.format(round=mid)) is not None:
-            low = mid
-        else:
-            high = mid - 1
+    cfg = RAKUTEN_CONFIG[ltype]
+    # タグを空白に変換してテキスト構造を解析
+    clean = re.sub(r"<script[\s\S]*?</script>", " ", html_text, flags=re.IGNORECASE)
+    clean = re.sub(r"<style[\s\S]*?</style>", " ", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"<[^>]+>", " ", clean)
+    clean = re.sub(r"\s+", " ", clean)
 
-    latest = low
-    for probe in range(latest + 1, latest + 6):
-        if fetch_csv_text(template.format(round=probe)) is not None:
-            latest = probe
-        else:
-            break
-    return latest
+    results = []
 
+    if ltype in ("numbers3", "numbers4"):
+        # パターン: 開催回 第7114回 抽せん日 2026/11/13 当せん番号 605
+        digits_len = cfg["main_count"]
+        pattern = re.compile(
+            r"第0*(\d+)回\s*抽せん日\s*(\d{4})/(\d{1,2})/(\d{1,2})\s*当せん番号\s*(\d{" + str(digits_len) + r"})"
+        )
+        for m in pattern.finditer(clean):
+            r_num = int(m.group(1))
+            d_str = format_jp_date(m.group(2), m.group(3), m.group(4))
+            nums = [int(ch) for ch in m.group(5)]
+            results.append({
+                "round": r_num,
+                "date": d_str,
+                "numbers": nums,
+                "bonus": [],
+            })
+        return results
 
-def parse_single_draw_csv(category, round_num, csv_text):
-    rows = list(csv.reader(io.StringIO(csv_text)))
-    date_formatted = None
+    # ロト6・ロト7・ミニロト
+    # ブロック単位で分割: 第XXXX回 抽せん日 YYYY/MM/DD ...
+    blocks = re.split(r"(?=第0*\d+回\s*抽せん日)", clean)
+    for blk in blocks:
+        m_head = re.match(r"第0*(\d+)回\s*抽せん日\s*(\d{4})/(\d{1,2})/(\d{1,2})", blk)
+        if not m_head:
+            continue
+        r_num = int(m_head.group(1))
+        d_str = format_jp_date(m_head.group(2), m_head.group(3), m_head.group(4))
 
-    for row in rows[:6]:
-        joined = ",".join(row)
-        d = normalize_japanese_date(joined)
-        if d:
-            date_formatted = d
-            break
+        m_nums = re.search(r"本数字\s*([\d\s\-]+?)\s*ボーナス数字\s*\(?([\d\s\(\)\-]+?)\)?(?:\s*1等|\s*抽せん|\s*$)", blk)
+        if not m_nums:
+            continue
 
-    if not date_formatted:
-        return {}
+        main_list = [int(x) for x in re.findall(r"\d+", m_nums.group(1))]
+        bonus_list = [int(x) for x in re.findall(r"\d+", m_nums.group(2))]
 
-    if category == "numbers":
-        n3_nums = []
-        n4_nums = []
-        for row in rows:
-            joined = ",".join(row)
-            # 例: ナンバーズ３抽せん数字,046
-            if ("ナンバーズ３" in joined or "ナンバーズ3" in joined) and "抽せん数字" in joined:
-                for cell in row:
-                    digits = re.sub(r"[^\d]", "", cell.strip())
-                    if len(digits) == 3 and "第" not in cell:
-                        n3_nums = [int(c) for c in digits]
-                        break
-            elif ("ナンバーズ４" in joined or "ナンバーズ4" in joined) and "抽せん数字" in joined:
-                for cell in row:
-                    digits = re.sub(r"[^\d]", "", cell.strip())
-                    if len(digits) == 4 and "第" not in cell:
-                        n4_nums = [int(c) for c in digits]
-                        break
+        if len(main_list) < cfg["main_count"] or not bonus_list:
+            continue
 
-        out = {}
-        if len(n3_nums) == 3:
-            out["numbers3"] = {"round": round_num, "date": date_formatted, "numbers": n3_nums, "bonus": []}
-        if len(n4_nums) == 4:
-            out["numbers4"] = {"round": round_num, "date": date_formatted, "numbers": n4_nums, "bonus": []}
-        return out
+        rec = {
+            "round": r_num,
+            "date": d_str,
+            "numbers": sorted(main_list[: cfg["main_count"]]),
+            "bonus": sorted(bonus_list[: (2 if ltype == "loto7" else 1)]),
+        }
 
-    # ロト6・ロト7・ミニロト・ビンゴ5
-    # 実測CSV書式: 本数字,01,02,16,21,25,35,ボーナス数字,22
-    main_nums = []
-    bonus_nums = []
-    carryover_yen = 0
+        if ltype in ("loto6", "loto7"):
+            m_co = re.search(r"キャリーオーバー\s*([\d,]+)\s*円", blk)
+            if m_co:
+                co_val = int(m_co.group(1).replace(",", ""))
+                if co_val > 0:
+                    rec["carryover"] = format_compact_yen(co_val)
+                    rec["carryoverExact"] = format_exact_yen(co_val)
 
-    for row in rows:
-        joined = ",".join(row)
-        if "本数字" in joined or "抽せん数字" in joined:
-            mode = "none"
-            for cell in row:
-                c = cell.strip()
-                if "本数字" in c or "抽せん数字" in c:
-                    mode = "main"
-                elif "ボーナス" in c:
-                    mode = "bonus"
-                elif re.fullmatch(r"\d{1,2}", c):
-                    val = int(c)
-                    if mode == "main":
-                        main_nums.append(val)
-                    elif mode == "bonus":
-                        bonus_nums.append(val)
-        elif "ボーナス" in joined and not bonus_nums:
-            for cell in row:
-                c = cell.strip()
-                if re.fullmatch(r"\d{1,2}", c):
-                    bonus_nums.append(int(c))
-        elif "キャリーオーバー" in joined:
-            for cell in row:
-                digits = re.sub(r"[^\d]", "", cell)
-                if digits and int(digits) > 0:
-                    carryover_yen = int(digits)
+        results.append(rec)
 
-    rec = None
-    if category == "miniloto" and len(main_nums) >= 5 and len(bonus_nums) >= 1:
-        rec = {"round": round_num, "date": date_formatted, "numbers": sorted(main_nums[:5]), "bonus": [bonus_nums[0]]}
-    elif category == "loto6" and len(main_nums) >= 6 and len(bonus_nums) >= 1:
-        rec = {"round": round_num, "date": date_formatted, "numbers": sorted(main_nums[:6]), "bonus": [bonus_nums[0]]}
-    elif category == "loto7" and len(main_nums) >= 7 and len(bonus_nums) >= 2:
-        rec = {"round": round_num, "date": date_formatted, "numbers": sorted(main_nums[:7]), "bonus": sorted(bonus_nums[:2])}
-    elif category == "bingo5" and len(main_nums) >= 8:
-        rec = {"round": round_num, "date": date_formatted, "numbers": main_nums[:8], "bonus": []}
-
-    if not rec:
-        return {}
-
-    if carryover_yen > 0 and category in ("loto6", "loto7"):
-        rec["carryover"] = format_compact_yen(carryover_yen)
-        rec["carryoverExact"] = format_exact_yen(carryover_yen)
-
-    return {category: rec}
+    return results
 
 
-def fetch_and_parse_round(category, round_num):
-    url = CSV_ENDPOINTS[category].format(round=round_num)
-    txt = fetch_csv_text(url)
-    if not txt:
-        return {}
-    return parse_single_draw_csv(category, round_num, txt)
+def collect_rakuten_lottery(ltype, existing_rounds):
+    cfg = RAKUTEN_CONFIG[ltype]
+    collected = []
+
+    # 1. 最新月・直近ページを取得
+    latest_html = fetch_html(cfg["latest_url"])
+    collected.extend(parse_rakuten_html(ltype, latest_html))
+
+    # 2. 過去全回号一覧ページから月別・20回別リンクを取得
+    past_index_html = fetch_html(cfg["past_index_url"])
+    if not past_index_html:
+        return collected
+
+    # 月別URL (/backnumber/loto6/202610/ 等) と 20回別URL (/backnumber/loto6_detail/0001-0020/ 等) を抽出
+    month_links = set(re.findall(rf"/backnumber/{ltype}/\d{{6}}/", past_index_html))
+    detail_links = set(re.findall(cfg["detail_pattern"], past_index_html))
+
+    target_urls = []
+    # すでに過去データが十分ある場合は月別と最新detailのみ取得（高速差分更新）
+    if len(existing_rounds) >= 300:
+        for path in sorted(month_links, reverse=True)[:3]:
+            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
+        for path in sorted(detail_links, reverse=True)[:3]:
+            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
+    else:
+        # 初回フルブートストラップ時は第1回〜最新回まですべて取得
+        for path in sorted(month_links):
+            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
+        for path in sorted(detail_links):
+            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
+
+    print(f"  -> {ltype}: {len(target_urls)}ページのアーカイブを取得中...")
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(fetch_html, u): u for u in target_urls}
+        for fut in as_completed(futures):
+            html = fut.result()
+            if html:
+                collected.extend(parse_rakuten_html(ltype, html))
+
+    return collected
+
+
+def parse_bingo5_html(html_text):
+    if not html_text:
+        return []
+    clean = re.sub(r"<script[\s\S]*?</script>", " ", html_text, flags=re.IGNORECASE)
+    clean = re.sub(r"<style[\s\S]*?</style>", " ", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"<[^>]+>", " ", clean)
+    # 全角数字を半角へ正規化
+    clean = clean.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+    clean = re.sub(r"\s+", " ", clean)
+
+    results = []
+    # パターン: 第1回 ビンゴ5 当選番号速報 抽選日 2017年4月5日 01 10 13 19 FREE 23 28 35 37
+    pattern = re.compile(
+        r"第0*(\d+)回\s*ビンゴ5\s*当選番号速報\s*抽選日\s*(\d{4})年(\d{1,2})月(\d{1,2})日\s*"
+        r"(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+FREE\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})"
+    )
+    for m in pattern.finditer(clean):
+        r_num = int(m.group(1))
+        d_str = format_jp_date(m.group(2), m.group(3), m.group(4))
+        nums = [int(m.group(i)) for i in range(5, 13)]
+        results.append({
+            "round": r_num,
+            "date": d_str,
+            "numbers": nums,
+            "bonus": [],
+        })
+    return results
+
+
+def collect_bingo5(existing_rounds):
+    collected = []
+    # 最新速報ページ
+    latest_html = fetch_html("https://takarakuji-loto.jp/bingo5/")
+    collected.extend(parse_bingo5_html(latest_html))
+
+    # 過去一覧インデックスから resultXXXX.html を収集
+    index_html = fetch_html("https://takarakuji-loto.jp/bingo5/index.html")
+    if not index_html:
+        index_html = latest_html
+
+    pages = set(re.findall(r"result\d{4}\.html", index_html or ""))
+    # 1〜500回まで確実にカバー
+    for start in range(1, 550, 10):
+        pages.add(f"result{start:04d}.html")
+
+    target_urls = [f"https://takarakuji-loto.jp/bingo5/{p}" for p in sorted(pages)]
+    if len(existing_rounds) >= 300:
+        target_urls = target_urls[-8:]
+
+    print(f"  -> bingo5: {len(target_urls)}ページのアーカイブを取得中...")
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(fetch_html, u): u for u in target_urls}
+        for fut in as_completed(futures):
+            html = fut.result()
+            if html:
+                collected.extend(parse_bingo5_html(html))
+
+    return collected
 
 
 def merge_cumulative(existing_list, new_items):
@@ -281,31 +321,10 @@ def main():
     db = load_existing_db()
     db["updatedAt"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    categories = ["numbers", "miniloto", "loto6", "loto7", "bingo5"]
-    collected_by_type = {t: [] for t in LOTTERY_TYPES}
-
-    for cat in categories:
-        latest_round = find_latest_round(cat)
-        print(f"=== {cat}: 最新回号 第{latest_round}回 を検出 ===")
-
-        if cat == "numbers":
-            existing_rounds = {x["round"] for x in db["numbers3"]} & {x["round"] for x in db["numbers4"]}
-        else:
-            existing_rounds = {x["round"] for x in db[cat]}
-
-        start_r = START_ROUNDS[cat]
-        missing_rounds = [r for r in range(start_r, latest_round + 1) if r not in existing_rounds]
-        print(f"  -> 未取得回号: {len(missing_rounds)}件 を並列ダウンロード中...")
-
-        with ThreadPoolExecutor(max_workers=12) as executor:
-            futures = {executor.submit(fetch_and_parse_round, cat, r): r for r in missing_rounds}
-            for fut in as_completed(futures):
-                res_map = fut.result()
-                for ltype, rec in res_map.items():
-                    collected_by_type[ltype].append(rec)
-
-    for ltype in LOTTERY_TYPES:
-        merged, added = merge_cumulative(db[ltype], collected_by_type[ltype])
+    for ltype in ["loto6", "loto7", "miniloto", "numbers3", "numbers4"]:
+        existing_rounds = {x["round"] for x in db[ltype]}
+        items = collect_rakuten_lottery(ltype, existing_rounds)
+        merged, added = merge_cumulative(db[ltype], items)
         db[ltype] = merged
         if merged and ltype in ("loto6", "loto7"):
             latest_rec = merged[0]
@@ -314,6 +333,13 @@ def main():
             else:
                 db["carryovers"].pop(ltype, None)
         print(f"[RESULT] {ltype}: 新規追加 {added}件 / 累積総数 {len(merged)}回分")
+
+    # ビンゴ5
+    existing_b5 = {x["round"] for x in db["bingo5"]}
+    b5_items = collect_bingo5(existing_b5)
+    merged_b5, added_b5 = merge_cumulative(db["bingo5"], b5_items)
+    db["bingo5"] = merged_b5
+    print(f"[RESULT] bingo5: 新規追加 {added_b5}件 / 累積総数 {len(merged_b5)}回分")
 
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(db, f, ensure_ascii=False, indent=2)
