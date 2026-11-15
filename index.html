@@ -1,0 +1,3123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>宝くじ予測アプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-wood-dark: #1A110B;
+      --bg-wood-mid: #2C1E14;
+      --parchment-light: #F7F1E3;
+      --parchment-mid: #EFE4CE;
+      --parchment-dark: #DFD0B4;
+      --brass-bright: #E5B94C;
+      --brass-mid: #C5962B;
+      --brass-dark: #8A6414;
+      --crimson: #8B1E1E;
+      --crimson-bright: #B82929;
+      --ink-dark: #22160F;
+      --ink-muted: #5C493A;
+      --emerald-ok: #1E5631;
+      --royal-blue: #1D4E89;
+      --shadow-deep: 0 10px 25px rgba(0, 0, 0, 0.55);
+      --radius-lg: 14px;
+      --radius-md: 9px;
+      --radius-sm: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-wood-dark);
+      background-image:
+        radial-gradient(circle at 50% 0%, rgba(197, 150, 43, 0.14), transparent 65%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 6px);
+      color: var(--ink-dark);
+      font-family: 'Noto Sans JP', sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 12px 12px 44px;
+    }
+
+    /* ================= HEADER ================= */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: linear-gradient(145deg, #2B1B11, #190F09);
+      border: 1.5px solid var(--brass-mid);
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(229, 185, 76, 0.28);
+      margin-bottom: 12px;
+    }
+
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .brand-emblem {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #F6D87B, #B8861B 75%, #755209);
+      border: 2px solid #FFF2C2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Shippori Mincho', serif;
+      font-weight: 800;
+      font-size: 20px;
+      color: #2A1608;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-family: 'Shippori Mincho', serif;
+      font-size: 19px;
+      font-weight: 800;
+      color: #F7E7C4;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65);
+      white-space: nowrap;
+    }
+
+    .sync-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 3px;
+      font-size: 10.5px;
+      color: #D5C29E;
+      font-weight: 500;
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ADE80;
+      box-shadow: 0 0 6px #4ADE80;
+      flex-shrink: 0;
+    }
+
+    .sync-dot.local {
+      background: var(--brass-bright);
+      box-shadow: 0 0 6px var(--brass-bright);
+    }
+
+    .header-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      width: 112px;
+    }
+
+    .brass-mini-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #422D1E, #281910);
+      color: #F6DFAC;
+      border: 1px solid var(--brass-mid);
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: transform 0.12s ease, border-color 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .brass-mini-btn:active {
+      transform: scale(0.96);
+    }
+
+    .brass-mini-btn .badge-count {
+      background: var(--crimson-bright);
+      color: #FFF;
+      border-radius: 99px;
+      padding: 0 5px;
+      font-size: 10px;
+      font-weight: 800;
+      margin-left: 2px;
+    }
+
+    /* ================= 6 LOTTERY TABS ================= */
+    .lottery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 12px;
+    }
+
+    .lottery-tab {
+      background: linear-gradient(180deg, #FBF0D3, #E9CE91);
+      border: 1.5px solid #C59838;
+      border-radius: var(--radius-md);
+      padding: 9px 4px;
+      color: #2B1A0E;
+      font-family: 'Shippori Mincho', serif;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 3px 7px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      transition: all 0.15s ease;
+    }
+
+    .lottery-tab.active {
+      background: linear-gradient(180deg, #B82929, #7D1717);
+      border: 1.5px solid #FFE299;
+      color: #FFFFFF;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 4px 12px rgba(184, 41, 41, 0.5), inset 0 1px 0 rgba(255, 235, 175, 0.55);
+      transform: translateY(-1px);
+    }
+
+    /* ================= MAIN PARCHMENT BOARD ================= */
+    .board-card {
+      background: linear-gradient(180deg, #2D1D13, #1D120B);
+      border: 2px solid var(--brass-mid);
+      border-radius: var(--radius-lg);
+      padding: 13px;
+      box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(229, 185, 76, 0.22);
+      margin-bottom: 12px;
+    }
+
+    /* Round Stepper + Latest Button (Single Row) */
+    .round-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: nowrap;
+      background: var(--parchment-dark);
+      border: 1px solid #C6B18B;
+      border-radius: var(--radius-md);
+      padding: 6px 8px;
+      margin-bottom: 10px;
+    }
+
+    .stepper-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: 1;
+      min-width: 0;
+      gap: 4px;
+    }
+
+    .step-btn {
+      background: linear-gradient(180deg, #3C281A, #23160E);
+      color: #F7E5BE;
+      border: 1px solid var(--brass-mid);
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .step-btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .round-display {
+      text-align: center;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .round-number {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 15.5px;
+      font-weight: 800;
+      color: var(--ink-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .round-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 99px;
+      margin-top: 1px;
+    }
+
+    .round-tag.target {
+      background: var(--crimson);
+      color: #FFF;
+    }
+
+    .round-tag.past {
+      background: #4A3828;
+      color: #F6DFAC;
+    }
+
+    .latest-btn {
+      background: linear-gradient(180deg, #F3CE68, #C99626);
+      color: #261507;
+      border: 1.5px solid #7E590D;
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+    }
+
+    .latest-btn.is-latest {
+      background: #D6C5A5;
+      color: #6B5844;
+      border-color: #B4A07E;
+      box-shadow: none;
+    }
+
+    /* Carryover Shimmer Banner */
+    .carryover-banner {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: linear-gradient(110deg, #6E1313 0%, #A32222 45%, #D99B26 50%, #A32222 55%, #6E1313 100%);
+      background-size: 220% 100%;
+      animation: goldShimmer 4.5s infinite linear;
+      color: #FFF7E0;
+      border: 1.5px solid var(--brass-bright);
+      border-radius: var(--radius-md);
+      padding: 7px 10px;
+      margin-bottom: 10px;
+      font-size: 12.5px;
+      font-weight: 800;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.65);
+      box-shadow: 0 3px 10px rgba(139, 30, 30, 0.35);
+    }
+
+    @keyframes goldShimmer {
+      0% { background-position: 100% 0; }
+      100% { background-position: -100% 0; }
+    }
+
+    /* Official Past Draw Banner */
+    .past-official-banner {
+      display: none;
+      background: #23160E;
+      border: 1.5px solid var(--brass-mid);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      margin-bottom: 11px;
+      color: #F7E8C8;
+    }
+
+    .past-banner-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+      border-bottom: 1px dashed rgba(229, 185, 76, 0.35);
+      padding-bottom: 6px;
+    }
+
+    .past-banner-title {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--brass-bright);
+    }
+
+    .past-date-chip {
+      font-size: 11px;
+      background: rgba(255,255,255,0.1);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: #E8D7B7;
+    }
+
+    .past-co-exact {
+      width: 100%;
+      background: linear-gradient(90deg, rgba(163, 34, 34, 0.85), rgba(110, 19, 19, 0.85));
+      border: 1px solid var(--brass-bright);
+      color: #FFE9A8;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 5px;
+      margin-top: 2px;
+      text-align: center;
+    }
+
+    /* Stacked Single-Row Utility Buttons */
+    .utility-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 11px;
+    }
+
+    .utility-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #EFE3C8, #DFCEAA);
+      border: 1.5px solid #B59968;
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      color: var(--ink-dark);
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+
+    .utility-btn .sub-pill {
+      font-size: 10.5px;
+      background: #3A2719;
+      color: #F6DFAC;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Condition Drawer */
+    .condition-drawer {
+      display: none;
+      background: #EFE4CE;
+      border: 1.5px solid #B89D6D;
+      border-radius: var(--radius-md);
+      padding: 11px;
+      margin-bottom: 11px;
+    }
+
+    .condition-drawer.open {
+      display: block;
+    }
+
+    .condition-guide {
+      font-size: 11.5px;
+      color: var(--ink-dark);
+      background: rgba(255, 255, 255, 0.6);
+      border-left: 3px solid var(--crimson);
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-bottom: 9px;
+      line-height: 1.45;
+    }
+
+    .full-axis-notice {
+      display: none;
+      font-size: 11px;
+      font-weight: 800;
+      color: #7C1111;
+      background: rgba(255, 232, 165, 0.75);
+      border: 1px solid #C5962B;
+      padding: 5px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 9px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .legend-items {
+      display: flex;
+      gap: 10px;
+    }
+
+    .dot-axis {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--brass-mid);
+      margin-right: 3px;
+    }
+
+    .dot-excl {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--crimson-bright);
+      margin-right: 3px;
+    }
+
+    .clear-cond-btn {
+      background: #5C493A;
+      color: #FFF;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .num-pad-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+
+    .num-pad-grid.digits-10 {
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .pad-cell {
+      background: #FFFDF7;
+      border: 1.5px solid #C2AE88;
+      border-radius: 6px;
+      padding: 7px 0;
+      text-align: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--ink-dark);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .pad-cell.state-axis {
+      background: linear-gradient(180deg, #F6D87B, #C89624);
+      border-color: #6B4B09;
+      color: #1F1205;
+      box-shadow: 0 2px 5px rgba(197, 150, 43, 0.45);
+    }
+
+    .pad-cell.state-exclude {
+      background: linear-gradient(180deg, #B82929, #7C1515);
+      border-color: #4A0909;
+      color: #FFF;
+      text-decoration: line-through;
+    }
+
+    /* Bingo 5 3x3 Condition Selector Grid */
+    .bingo-cond-3x3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .bingo-cond-slot {
+      background: rgba(255, 255, 255, 0.62);
+      border: 1.5px solid #B89D6D;
+      border-radius: 7px;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .bingo-cond-slot.free-slot {
+      background: linear-gradient(145deg, #7C1818, #4D0D0D);
+      border-color: var(--brass-mid);
+      color: #FFE9A8;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .bingo-slot-head {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--ink-muted);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .bingo-slot-btns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+    }
+
+    .bingo-mini-tap {
+      background: #FFFDF7;
+      border: 1px solid #C2AE88;
+      border-radius: 4px;
+      padding: 4px 0;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink-dark);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .bingo-mini-tap.state-axis {
+      background: linear-gradient(180deg, #F6D87B, #C89624);
+      border-color: #6B4B09;
+      color: #1F1205;
+    }
+
+    .bingo-mini-tap.state-exclude {
+      background: linear-gradient(180deg, #B82929, #7C1515);
+      border-color: #4A0909;
+      color: #FFF;
+      text-decoration: line-through;
+    }
+
+    /* Main Action Buttons */
+    .action-btn-row {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 8px;
+    }
+
+    .primary-predict-btn {
+      background: linear-gradient(180deg, #A92323, #6E1212);
+      color: #FFF6DC;
+      border: 2px solid var(--brass-bright);
+      border-radius: var(--radius-md);
+      padding: 12px 10px;
+      font-family: 'Shippori Mincho', serif;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(139, 30, 30, 0.45), inset 0 1px 0 rgba(255, 232, 165, 0.4);
+      letter-spacing: 0.04em;
+    }
+
+    .primary-predict-btn:active {
+      transform: scale(0.98);
+    }
+
+    .official-reset-btn {
+      background: linear-gradient(180deg, #3D291B, #23160D);
+      color: #F6DFAC;
+      border: 1.5px solid var(--brass-mid);
+      border-radius: var(--radius-md);
+      padding: 12px 8px;
+      font-family: 'Shippori Mincho', serif;
+      font-size: 13.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ================= PREDICTION RESULT CARDS ================= */
+    .results-section {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .prediction-card {
+      background: linear-gradient(180deg, #FAF4E6, #EFE3C8);
+      border: 2px solid var(--brass-mid);
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
+    }
+
+    .pred-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 9px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #D3C19E;
+    }
+
+    .pred-rank-title {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--ink-dark);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rank-badge {
+      background: var(--crimson);
+      color: #FFF;
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'Noto Sans JP', sans-serif;
+      white-space: nowrap;
+    }
+
+    .mode-pill {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    .mode-pill.official {
+      background: #2C1D12;
+      color: var(--brass-bright);
+      border: 1px solid var(--brass-mid);
+    }
+
+    .mode-pill.custom {
+      background: var(--crimson);
+      color: #FFF;
+    }
+
+    /* Gold Coins Row */
+    .coins-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    .gold-coin {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #FFF3C4, #E5B642 62%, #9B6E12 100%);
+      border: 2px solid #785208;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.32), inset 0 1px 2px rgba(255,255,255,0.85);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', 'Noto Sans JP', serif;
+      font-weight: 800;
+      font-size: 15.5px;
+      color: #241406;
+      position: relative;
+    }
+
+    .gold-coin.is-axis {
+      background: radial-gradient(circle at 32% 28%, #FFE599, #D99B1E 65%, #7C4F04 100%);
+      border: 2.5px solid var(--crimson);
+    }
+
+    .gold-coin.is-axis::after {
+      content: '軸';
+      position: absolute;
+      top: -5px;
+      right: -4px;
+      background: var(--crimson);
+      color: #FFF;
+      font-size: 8.5px;
+      font-family: 'Noto Sans JP', sans-serif;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+
+    .gold-coin.hit-main {
+      background: radial-gradient(circle at 32% 28%, #FFD6D6, #C92A2A 65%, #6E0E0E 100%);
+      border: 2.5px solid #FFE28A;
+      color: #FFF;
+      box-shadow: 0 0 10px rgba(201, 42, 42, 0.75);
+    }
+
+    .gold-coin.hit-main::before {
+      content: '◯';
+      position: absolute;
+      bottom: -6px;
+      right: -4px;
+      background: #FFE28A;
+      color: #7C1111;
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 1;
+      padding: 1px 2px;
+      border-radius: 50%;
+    }
+
+    .gold-coin.hit-bonus {
+      background: radial-gradient(circle at 32% 28%, #D6EAFF, #1D4E89 65%, #0D294D 100%);
+      border: 2.5px solid #FFE28A;
+      color: #FFF;
+    }
+
+    .gold-coin.hit-bonus::before {
+      content: 'B';
+      position: absolute;
+      bottom: -5px;
+      right: -4px;
+      background: #FFE28A;
+      color: #0D294D;
+      font-size: 8.5px;
+      font-weight: 900;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+
+    .bonus-inline-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: #F6DFAC;
+      margin-left: 4px;
+    }
+
+    /* Bingo 5 3x3 Board */
+    .bingo-3x3-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .bingo-3x3-board {
+      display: grid;
+      grid-template-columns: repeat(3, 44px);
+      grid-template-rows: repeat(3, 44px);
+      gap: 5px;
+      background: #3A2618;
+      padding: 7px;
+      border-radius: 10px;
+      border: 2px solid var(--brass-mid);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    .bingo-cell {
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #FFF3C4, #E5B642 65%, #9B6E12 100%);
+      border: 1.5px solid #6E4B07;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', 'Noto Sans JP', serif;
+      font-weight: 800;
+      font-size: 15px;
+      color: #241406;
+      position: relative;
+    }
+
+    .bingo-cell.free-cell {
+      border-radius: 8px;
+      background: linear-gradient(145deg, #9E2222, #5E1010);
+      border: 1.5px solid var(--brass-bright);
+      color: #FFE9A8;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+    }
+
+    .bingo-cell.hit-main {
+      background: radial-gradient(circle at 32% 28%, #FFD6D6, #C92A2A 65%, #6E0E0E 100%);
+      border: 2px solid #FFE28A;
+      color: #FFF;
+    }
+
+    .bingo-cell.is-axis {
+      border: 2.5px solid var(--crimson);
+    }
+
+    /* Mini 3x3 Bingo Grid for Past Banner & Modals */
+    .bingo-mini-3x3 {
+      display: inline-grid;
+      grid-template-columns: repeat(3, 28px);
+      grid-template-rows: repeat(3, 28px);
+      gap: 3px;
+      background: #2D1D12;
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid var(--brass-mid);
+      vertical-align: middle;
+    }
+
+    .bingo-mini-cell {
+      background: #F6E6BE;
+      color: #23150B;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .bingo-mini-cell.free {
+      background: var(--crimson);
+      color: #FFE9A8;
+      font-size: 8.5px;
+    }
+
+    .bingo-mini-cell.hit-cell {
+      background: radial-gradient(circle, #D93838, #8A1111);
+      color: #FFF;
+      border: 1.5px solid #FFE28A;
+      border-radius: 50%;
+    }
+
+    /* Rationale Box */
+    .rationale-box {
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid #D3C19E;
+      border-radius: 7px;
+      padding: 7px 9px;
+      font-size: 11.5px;
+      color: var(--ink-dark);
+      margin-bottom: 9px;
+      line-height: 1.45;
+    }
+
+    .card-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .stat-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink-muted);
+    }
+
+    .stat-chip {
+      background: #E4D5B7;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .save-action-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: auto;
+    }
+
+    .bet-type-select {
+      background: #FFFDF7;
+      color: var(--ink-dark);
+      border: 1.5px solid var(--brass-mid);
+      border-radius: 6px;
+      padding: 5px 6px;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .save-ticket-btn {
+      background: linear-gradient(180deg, #276B3D, #184727);
+      color: #F4FFF7;
+      border: 1.5px solid #76C893;
+      border-radius: 6px;
+      padding: 6px 11px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.22);
+    }
+
+    .save-ticket-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* ================= MODALS ================= */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 7, 4, 0.82);
+      z-index: 1000;
+      padding: 16px 12px;
+      overflow-y: auto;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 500px;
+      background: linear-gradient(180deg, var(--parchment-light), var(--parchment-mid));
+      border: 2px solid var(--brass-bright);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+      overflow: hidden;
+      margin-top: 12px;
+      margin-bottom: 24px;
+    }
+
+    .modal-header {
+      background: linear-gradient(145deg, #2D1C11, #1A0F08);
+      color: #F7E7C4;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1.5px solid var(--brass-mid);
+    }
+
+    .modal-title {
+      margin: 0;
+      font-family: 'Shippori Mincho', serif;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .modal-close-btn {
+      background: #4A3222;
+      color: #F7E7C4;
+      border: 1px solid var(--brass-mid);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 12px;
+      max-height: 76vh;
+      overflow-y: auto;
+    }
+
+    /* Past 100 List Items */
+    .history-item {
+      background: rgba(255,255,255,0.65);
+      border: 1px solid #C8B48E;
+      border-radius: 8px;
+      padding: 9px 10px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .history-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 5px;
+    }
+
+    .history-round {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--ink-dark);
+    }
+
+    .history-date {
+      font-size: 11px;
+      color: var(--ink-muted);
+      background: #E8DAC0;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .co-mini-badge {
+      background: linear-gradient(180deg, #A32222, #6E1313);
+      color: #FFE9A8;
+      border: 1px solid var(--brass-bright);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 99px;
+    }
+
+    .history-nums {
+      font-family: 'Cinzel', 'Noto Sans JP', serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: #24150A;
+      letter-spacing: 0.03em;
+    }
+
+    .history-bonus {
+      color: var(--royal-blue);
+      font-size: 12.5px;
+      margin-left: 5px;
+    }
+
+    .verify-jump-btn {
+      background: linear-gradient(180deg, #3C281A, #23160E);
+      color: #F6DFAC;
+      border: 1px solid var(--brass-mid);
+      border-radius: 6px;
+      padding: 6px 9px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Ticket Ledger Backup Box */
+    .backup-panel {
+      background: rgba(232, 218, 192, 0.75);
+      border: 1.5px solid #B89D6D;
+      border-radius: 9px;
+      padding: 9px 10px;
+      margin-bottom: 11px;
+    }
+
+    .backup-title {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--ink-dark);
+      margin-bottom: 6px;
+    }
+
+    .backup-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .backup-action-btn {
+      background: linear-gradient(180deg, #3E2A1B, #25170E);
+      color: #F6DFAC;
+      border: 1px solid var(--brass-mid);
+      border-radius: 6px;
+      padding: 7px 6px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .restore-box {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .restore-box.open {
+      display: block;
+    }
+
+    .restore-textarea {
+      width: 100%;
+      height: 60px;
+      border: 1px solid #A8926C;
+      border-radius: 5px;
+      padding: 6px;
+      font-size: 11px;
+      background: #FFFDF8;
+      color: var(--ink-dark);
+      resize: none;
+      margin-bottom: 5px;
+    }
+
+    .restore-exec-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #276B3D, #184727);
+      color: #FFF;
+      border: 1px solid #76C893;
+      border-radius: 5px;
+      padding: 6px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* Ticket Ledger Items & Match Circle Highlights */
+    .ticket-item {
+      background: rgba(255,255,255,0.72);
+      border: 1.5px solid #C5B089;
+      border-radius: 9px;
+      padding: 10px;
+      margin-bottom: 9px;
+    }
+
+    .ticket-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .ticket-title {
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--ink-dark);
+    }
+
+    .bet-mode-tag {
+      display: inline-block;
+      background: #3A2719;
+      color: #FFE9A8;
+      border: 1px solid var(--brass-mid);
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+
+    .ticket-status-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .ticket-status-badge.pending {
+      background: #E2D3B5;
+      color: #5C493A;
+    }
+
+    .ticket-status-badge.win {
+      background: var(--crimson);
+      color: #FFE9A8;
+      border: 1px solid var(--brass-bright);
+    }
+
+    .ticket-status-badge.lose {
+      background: #4A3B30;
+      color: #E6D8C3;
+    }
+
+    .ledger-coins-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin: 6px 0;
+    }
+
+    .ledger-coin {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #FFF3C4, #E5B642 62%, #9B6E12 100%);
+      border: 1.5px solid #785208;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', 'Noto Sans JP', serif;
+      font-weight: 800;
+      font-size: 13.5px;
+      color: #241406;
+      position: relative;
+    }
+
+    .ledger-coin.hit-main {
+      background: radial-gradient(circle at 32% 28%, #FFD6D6, #C92A2A 65%, #6E0E0E 100%);
+      border: 2px solid #FFE28A;
+      color: #FFF;
+      box-shadow: 0 0 8px rgba(201, 42, 42, 0.7);
+    }
+
+    .ledger-coin.hit-main::after {
+      content: '◯';
+      position: absolute;
+      top: -5px;
+      right: -4px;
+      background: #FFE28A;
+      color: #7C1111;
+      font-size: 8.5px;
+      font-weight: 900;
+      line-height: 1;
+      padding: 1px 2px;
+      border-radius: 50%;
+    }
+
+    .ledger-coin.hit-bonus {
+      background: radial-gradient(circle at 32% 28%, #D6EAFF, #1D4E89 65%, #0D294D 100%);
+      border: 2px solid #FFE28A;
+      color: #FFF;
+    }
+
+    .ledger-coin.hit-bonus::after {
+      content: 'B';
+      position: absolute;
+      top: -5px;
+      right: -4px;
+      background: #FFE28A;
+      color: #0D294D;
+      font-size: 8px;
+      font-weight: 900;
+      padding: 0 3px;
+      border-radius: 3px;
+    }
+
+    .ledger-official-ref {
+      font-size: 11.5px;
+      color: var(--ink-muted);
+      background: rgba(232, 218, 192, 0.65);
+      padding: 5px 8px;
+      border-radius: 6px;
+      margin-top: 5px;
+      line-height: 1.45;
+    }
+
+    .ticket-del-btn {
+      background: transparent;
+      border: 1px solid #A89474;
+      color: #6B5744;
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 10.5px;
+      cursor: pointer;
+    }
+
+    /* 14-Day Single Column Calendar List */
+    .calendar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .cal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.7);
+      border: 1px solid #C8B48E;
+      border-radius: 8px;
+      padding: 9px 12px;
+    }
+
+    .cal-row.super-lucky {
+      background: linear-gradient(90deg, #FFF7DF, #F8E5B0);
+      border: 1.5px solid var(--brass-mid);
+    }
+
+    .cal-date-str {
+      font-weight: 800;
+      font-size: 13.5px;
+      color: var(--ink-dark);
+    }
+
+    .cal-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rokuyo-pill {
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #E6D7BA;
+      color: #3A2718;
+    }
+
+    .rokuyo-pill.taian {
+      background: var(--crimson);
+      color: #FFF;
+    }
+
+    .auspicious-tag {
+      font-size: 11px;
+      font-weight: 800;
+      color: #8A5A00;
+      background: rgba(229, 185, 76, 0.35);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    /* Toast Notification */
+    .toast-banner {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #23150B;
+      color: #FFE9A8;
+      border: 1.5px solid var(--brass-bright);
+      padding: 9px 16px;
+      border-radius: 99px;
+      font-size: 12.5px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 2000;
+      white-space: nowrap;
+    }
+
+    .toast-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="brand-area">
+        <div class="brand-emblem">宝</div>
+        <div class="brand-text">
+          <h1 class="brand-title">宝くじ予測アプリ</h1>
+          <div class="sync-status" id="syncStatusText">
+            <span class="sync-dot local" id="syncDot"></span>
+            <span id="syncLabel">全期間累積統計エンジン準備中...</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="brass-mini-btn" id="openHistoryBtn">📜 過去100回台帳</button>
+        <button type="button" class="brass-mini-btn" id="openLedgerBtn">📒 購入台帳 <span class="badge-count" id="ledgerCountBadge">0</span></button>
+      </div>
+    </header>
+
+    <!-- 6 LOTTERY TYPE TABS -->
+    <nav class="lottery-grid" id="lotteryTabs">
+      <button type="button" class="lottery-tab active" data-type="numbers3">ナンバーズ3</button>
+      <button type="button" class="lottery-tab" data-type="numbers4">ナンバーズ4</button>
+      <button type="button" class="lottery-tab" data-type="miniloto">ミニロト</button>
+      <button type="button" class="lottery-tab" data-type="loto6">ロト6</button>
+      <button type="button" class="lottery-tab" data-type="loto7">ロト7</button>
+      <button type="button" class="lottery-tab" data-type="bingo5">ビンゴ5</button>
+    </nav>
+
+    <!-- MAIN BOARD -->
+    <main class="board-card">
+      <!-- Round Stepper + Latest Button (Single Row) -->
+      <div class="round-control-row">
+        <div class="stepper-group">
+          <button type="button" class="step-btn" id="prevRoundBtn">◀ 前回</button>
+          <div class="round-display">
+            <div class="round-number" id="roundNumberText">第0000回</div>
+            <span class="round-tag target" id="roundStatusTag">次回購入予測対象</span>
+          </div>
+          <button type="button" class="step-btn" id="nextRoundBtn" disabled>次回 ▶</button>
+        </div>
+        <button type="button" class="latest-btn is-latest" id="latestRoundBtn">⏭ 最新</button>
+      </div>
+
+      <!-- Carryover Shimmer Banner -->
+      <div class="carryover-banner" id="carryoverBanner">
+        <span>👑 キャリーオーバー発生中：</span>
+        <span id="carryoverAmountText">0円</span>
+      </div>
+
+      <!-- Past Official Result Banner -->
+      <div class="past-official-banner" id="pastOfficialBanner">
+        <div class="past-banner-header">
+          <span class="past-banner-title" id="pastBannerTitle">🏛 第0000回 公式確定当選番号</span>
+          <span class="past-date-chip" id="pastBannerDate">📅 2026/00/00</span>
+          <div class="past-co-exact" id="pastBannerCarryover" style="display:none;"></div>
+        </div>
+        <div id="pastOfficialNumbersArea"></div>
+      </div>
+
+      <!-- Stacked Single-Row Utility Buttons -->
+      <div class="utility-stack">
+        <button type="button" class="utility-btn" id="openCalendarBtn">
+          <span>📅 14日間開運暦（六曜・一粒万倍日・大安）</span>
+          <span class="sub-pill">別画面で開く ↗</span>
+        </button>
+
+        <button type="button" class="utility-btn" id="toggleConditionBtn">
+          <span>⚙ 軸数字・除外数字を選ぶ（詳細設定）</span>
+          <span class="sub-pill" id="conditionSummaryPill">設定なし ▼</span>
+        </button>
+      </div>
+
+      <!-- Collapsible Condition Drawer -->
+      <div class="condition-drawer" id="conditionDrawer">
+        <div class="condition-guide" id="conditionGuideText"></div>
+        <div class="full-axis-notice" id="bingoFullAxisNotice">※全8枠を軸固定したため、3口すべて同一の確定目を表示しています</div>
+        <div class="legend-row">
+          <div class="legend-items">
+            <span><i class="dot-axis"></i>1回タップ：軸固定</span>
+            <span><i class="dot-excl"></i>2回タップ：除外</span>
+          </div>
+          <button type="button" class="clear-cond-btn" id="clearConditionsBtn">条件リセット</button>
+        </div>
+        <div id="conditionPadContainer"></div>
+      </div>
+
+      <!-- Predict & Official Reset Buttons -->
+      <div class="action-btn-row">
+        <button type="button" class="primary-predict-btn" id="runPredictBtn">🎲 予測選定を実行</button>
+        <button type="button" class="official-reset-btn" id="resetOfficialBtn">🏛 公式本命に戻す</button>
+      </div>
+    </main>
+
+    <!-- 3 PREDICTION RESULT CARDS -->
+    <section class="results-section" id="resultsContainer"></section>
+  </div>
+
+  <!-- MODAL 1: PAST 100 DRAWS LEDGER -->
+  <div class="modal-backdrop" id="historyModal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title" id="historyModalTitle">📜 過去100回 当選番号台帳</h2>
+        <button type="button" class="modal-close-btn" data-close="historyModal">✕ 閉じる</button>
+      </div>
+      <div class="modal-body" id="historyModalBody"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: PURCHASED TICKET LEDGER -->
+  <div class="modal-backdrop" id="ledgerModal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">📒 購入台帳・当選照合記録</h2>
+        <button type="button" class="modal-close-btn" data-close="ledgerModal">✕ 閉じる</button>
+      </div>
+      <div class="modal-body" id="ledgerModalBody"></div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: 14-DAY LUCKY CALENDAR -->
+  <div class="modal-backdrop" id="calendarModal">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">📅 14日間開運暦（六曜・吉日）</h2>
+        <button type="button" class="modal-close-btn" data-close="calendarModal">✕ 閉じる</button>
+      </div>
+      <div class="modal-body" id="calendarModalBody"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-banner" id="toastBanner"></div>
+
+  <script>
+    /**
+     * 宝くじ予測アプリ（ナンバーズ買い方記録＆精密照合搭載・最終決定版）
+     */
+    const LOTTERY_CONFIG = {
+      numbers3: {
+        name: 'ナンバーズ3',
+        min: 0, max: 9, pick: 3, bonusCount: 0,
+        allowDuplicates: true, sorted: false,
+        maxAxis: 1, maxExclude: 3,
+        sumIdealRange: [10, 17],
+        drawDays: [1, 2, 3, 4, 5],
+        baseRound: 7065, baseDate: '2026-11-13'
+      },
+      numbers4: {
+        name: 'ナンバーズ4',
+        min: 0, max: 9, pick: 4, bonusCount: 0,
+        allowDuplicates: true, sorted: false,
+        maxAxis: 1, maxExclude: 3,
+        sumIdealRange: [14, 22],
+        drawDays: [1, 2, 3, 4, 5],
+        baseRound: 7065, baseDate: '2026-11-13'
+      },
+      miniloto: {
+        name: 'ミニロト',
+        min: 1, max: 31, pick: 5, bonusCount: 1,
+        allowDuplicates: false, sorted: true,
+        maxAxis: 1, maxExclude: 4,
+        sumIdealRange: [65, 95],
+        drawDays: [2],
+        baseRound: 1362, baseDate: '2026-11-10'
+      },
+      loto6: {
+        name: 'ロト6',
+        min: 1, max: 43, pick: 6, bonusCount: 1,
+        allowDuplicates: false, sorted: true,
+        maxAxis: 2, maxExclude: 5,
+        sumIdealRange: [110, 155],
+        drawDays: [1, 4],
+        baseRound: 2150, baseDate: '2026-11-12'
+      },
+      loto7: {
+        name: 'ロト7',
+        min: 1, max: 37, pick: 7, bonusCount: 2,
+        allowDuplicates: false, sorted: true,
+        maxAxis: 2, maxExclude: 5,
+        sumIdealRange: [112, 158],
+        drawDays: [5],
+        baseRound: 652, baseDate: '2026-11-13'
+      },
+      bingo5: {
+        name: 'ビンゴ5',
+        min: 1, max: 40, pick: 8, bonusCount: 0,
+        allowDuplicates: false, sorted: false,
+        maxAxis: 1, maxExclude: 1,
+        sumIdealRange: [145, 185],
+        drawDays: [3],
+        baseRound: 446, baseDate: '2026-11-11'
+      }
+    };
+
+    const APP_STATE = {
+      currentType: 'numbers3',
+      targetRounds: {},
+      selectedRound: 7065,
+      isCustomMode: false,
+      customSeedOffset: 0,
+      conditions: {
+        numbers3: { axis: [], exclude: [] },
+        numbers4: { axis: [], exclude: [] },
+        miniloto: { axis: [], exclude: [] },
+        loto6: { axis: [], exclude: [] },
+        loto7: { axis: [], exclude: [] },
+        bingo5: { axis: Array(8).fill(null), exclude: Array(8).fill(null) }
+      },
+      historyData: {},
+      carryoverInfo: {
+        loto6: { amount: 284512600, short: '2.8億' },
+        loto7: { amount: 642185400, short: '6.4億' }
+      },
+      tickets: [],
+      isCloudSynced: false
+    };
+
+    /* ================= DETERMINISTIC PRNG ================= */
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function() {
+        a |= 0;
+        a = a + 0x6D2B79F5 | 0;
+        let t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function stringToSeed(str) {
+      let h = 2166136261 >>> 0;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    /* ================= DATE & WEEKDAY HELPERS ================= */
+    const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
+
+    function formatDateWithWeekday(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      const w = WEEKDAY_JA[dateObj.getDay()];
+      return `${y}/${m}/${d}(${w})`;
+    }
+
+    function computeDrawDateForRound(type, round) {
+      const cfg = LOTTERY_CONFIG[type];
+      const base = new Date(cfg.baseDate + 'T12:00:00');
+      const diff = round - cfg.baseRound;
+      if (diff === 0) return formatDateWithWeekday(base);
+
+      const step = diff > 0 ? 1 : -1;
+      let remaining = Math.abs(diff);
+      const cursor = new Date(base);
+
+      while (remaining > 0) {
+        cursor.setDate(cursor.getDate() + step);
+        if (cfg.drawDays.includes(cursor.getDay())) {
+          remaining--;
+        }
+      }
+      return formatDateWithWeekday(cursor);
+    }
+
+    function formatShortCarryover(yen) {
+      if (!yen || yen <= 0) return '';
+      if (yen >= 100000000) {
+        return (yen / 100000000).toFixed(1) + '億';
+      }
+      return Math.round(yen / 10000).toLocaleString() + '万';
+    }
+
+    /* ================= STANDALONE ARCHIVE GENERATOR ================= */
+    function generateFallbackArchive(type) {
+      const cfg = LOTTERY_CONFIG[type];
+      const list = [];
+      const count = 320;
+      const startRound = cfg.baseRound - count;
+
+      for (let r = startRound; r < cfg.baseRound; r++) {
+        const rng = mulberry32(stringToSeed(`archive_${type}_${r}`));
+        let main = [];
+        let bonus = [];
+
+        if (type === 'numbers3' || type === 'numbers4') {
+          for (let i = 0; i < cfg.pick; i++) {
+            main.push(Math.floor(rng() * 10));
+          }
+        } else if (type === 'bingo5') {
+          for (let slot = 0; slot < 8; slot++) {
+            const minV = slot * 5 + 1;
+            main.push(minV + Math.floor(rng() * 5));
+          }
+        } else {
+          const pool = [];
+          for (let n = cfg.min; n <= cfg.max; n++) pool.push(n);
+          for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(rng() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+          }
+          main = pool.slice(0, cfg.pick).sort((a, b) => a - b);
+          bonus = pool.slice(cfg.pick, cfg.pick + cfg.bonusCount).sort((a, b) => a - b);
+        }
+
+        let carryover = 0;
+        if ((type === 'loto6' || type === 'loto7') && rng() > 0.56) {
+          const baseCo = type === 'loto7' ? 180000000 : 95000000;
+          carryover = Math.floor(baseCo + rng() * 520000000);
+        }
+
+        list.push({
+          round: r,
+          date: computeDrawDateForRound(type, r),
+          main,
+          bonus,
+          carryover,
+          carryoverShort: formatShortCarryover(carryover)
+        });
+      }
+      return list;
+    }
+
+    /* ================= CLOUD SYNC & STORAGE ================= */
+    async function initializeData() {
+      try {
+        const savedTickets = localStorage.getItem('lottery_pred_tickets_v2');
+        if (savedTickets) {
+          APP_STATE.tickets = JSON.parse(savedTickets);
+        }
+      } catch (e) {
+        APP_STATE.tickets = [];
+      }
+
+      Object.keys(LOTTERY_CONFIG).forEach(type => {
+        APP_STATE.historyData[type] = generateFallbackArchive(type);
+        APP_STATE.targetRounds[type] = LOTTERY_CONFIG[type].baseRound;
+      });
+
+      try {
+        const resp = await fetch('./lottery_history.json?v=' + Date.now(), { cache: 'no-store' });
+        if (resp.ok) {
+          const json = await resp.json();
+          if (json) {
+            Object.keys(LOTTERY_CONFIG).forEach(type => {
+              const remoteList = Array.isArray(json[type]) ? json[type] : (json.lotteries && json.lotteries[type]);
+              if (Array.isArray(remoteList) && remoteList.length > 0) {
+                const normalized = remoteList.map(item => {
+                  const rawNums = item.numbers || item.main || [];
+                  const coExactStr = item.carryoverExact || '';
+                  const coNumeric = item.carryover && typeof item.carryover === 'number'
+                    ? item.carryover
+                    : Number(String(coExactStr).replace(/[^\d]/g, '')) || 0;
+                  return {
+                    round: Number(item.round),
+                    date: item.date || computeDrawDateForRound(type, Number(item.round)),
+                    main: rawNums.map(Number),
+                    bonus: Array.isArray(item.bonus) ? item.bonus.map(Number) : [],
+                    carryover: coNumeric,
+                    carryoverShort: (typeof item.carryover === 'string' ? item.carryover : '') || formatShortCarryover(coNumeric)
+                  };
+                }).sort((a, b) => a.round - b.round);
+
+                APP_STATE.historyData[type] = normalized;
+                const latestPast = normalized[normalized.length - 1].round;
+                APP_STATE.targetRounds[type] = latestPast + 1;
+              }
+            });
+            if (json.carryovers) {
+              ['loto6', 'loto7'].forEach(k => {
+                if (json.carryovers[k]) {
+                  const amt = Number(String(json.carryovers[k]).replace(/[^\d]/g, '')) || 0;
+                  if (amt > 0) {
+                    APP_STATE.carryoverInfo[k] = { amount: amt, short: formatShortCarryover(amt) };
+                  }
+                }
+              });
+            }
+            APP_STATE.isCloudSynced = true;
+          }
+        }
+      } catch (e) {
+        APP_STATE.isCloudSynced = false;
+      }
+
+      APP_STATE.selectedRound = APP_STATE.targetRounds[APP_STATE.currentType];
+      updateSyncStatusUI();
+      updateLedgerBadge();
+      renderAll();
+    }
+
+    function updateSyncStatusUI() {
+      const dot = document.getElementById('syncDot');
+      const label = document.getElementById('syncLabel');
+      const totalRecords = APP_STATE.historyData[APP_STATE.currentType]?.length || 0;
+      if (APP_STATE.isCloudSynced) {
+        dot.classList.remove('local');
+        label.textContent = `クラウド自動同期済（全${totalRecords}回累積学習中）`;
+      } else {
+        dot.classList.add('local');
+        label.textContent = `スタンドアロン稼働中（全${totalRecords}回累積学習済）`;
+      }
+    }
+
+    /* ================= HYBRID SELF-EVOLVING STATISTICAL ENGINE ================= */
+    function countConsecutivePairs(arr, isSortedGame) {
+      if (arr.length < 2) return 0;
+      let pairs = 0;
+      if (isSortedGame) {
+        const sorted = [...arr].sort((a, b) => a - b);
+        for (let i = 0; i < sorted.length - 1; i++) {
+          if (sorted[i + 1] - sorted[i] === 1) pairs++;
+        }
+      } else {
+        for (let i = 0; i < arr.length - 1; i++) {
+          if (Math.abs(arr[i + 1] - arr[i]) === 1) pairs++;
+        }
+      }
+      return pairs;
+    }
+
+    function analyzeCumulativeStats(type, beforeRound) {
+      const allHistory = APP_STATE.historyData[type] || [];
+      const pastDraws = allHistory.filter(d => d.round < beforeRound);
+      const totalCount = pastDraws.length;
+      const recentDraws = pastDraws.slice(-30);
+      const lastDraw = pastDraws.length > 0 ? pastDraws[pastDraws.length - 1] : null;
+
+      const cfg = LOTTERY_CONFIG[type];
+      const freqAll = {};
+      const freqRecent = {};
+      const lastSeenIndex = {};
+      const avgInterval = {};
+      const currentDrought = {};
+      const reboundRatio = {};
+
+      for (let n = cfg.min; n <= cfg.max; n++) {
+        freqAll[n] = 0;
+        freqRecent[n] = 0;
+        lastSeenIndex[n] = -1;
+      }
+
+      let sumAllTotal = 0;
+      let sumRecentTotal = 0;
+      let consecutiveDrawsCount = 0;
+
+      pastDraws.forEach((draw, idx) => {
+        const s = draw.main.reduce((a, b) => a + b, 0);
+        sumAllTotal += s;
+        if (countConsecutivePairs(draw.main, cfg.sorted) > 0) {
+          consecutiveDrawsCount++;
+        }
+        draw.main.forEach(num => {
+          freqAll[num] = (freqAll[num] || 0) + 1;
+          lastSeenIndex[num] = idx;
+        });
+      });
+
+      recentDraws.forEach(draw => {
+        sumRecentTotal += draw.main.reduce((a, b) => a + b, 0);
+        draw.main.forEach(num => {
+          freqRecent[num] = (freqRecent[num] || 0) + 1;
+        });
+      });
+
+      const theoreticalInterval = type === 'bingo5'
+        ? 5.0
+        : (type === 'numbers3' || type === 'numbers4')
+        ? (10 / cfg.pick)
+        : (cfg.max / cfg.pick);
+
+      for (let n = cfg.min; n <= cfg.max; n++) {
+        const count = freqAll[n] || 0;
+        const meanGap = count > 0 ? (totalCount / count) : theoreticalInterval;
+        const drought = lastSeenIndex[n] >= 0 ? (totalCount - 1 - lastSeenIndex[n]) : totalCount;
+        avgInterval[n] = meanGap;
+        currentDrought[n] = drought;
+        reboundRatio[n] = drought / Math.max(1, meanGap);
+      }
+
+      const defaultMid = Math.round((cfg.sumIdealRange[0] + cfg.sumIdealRange[1]) / 2);
+      const allMeanSum = totalCount > 0 ? Math.round(sumAllTotal / totalCount) : defaultMid;
+      const recentMeanSum = recentDraws.length > 0 ? Math.round(sumRecentTotal / recentDraws.length) : allMeanSum;
+      const dynamicMeanSum = Math.round(allMeanSum * 0.6 + recentMeanSum * 0.4);
+      const consecutiveRate = totalCount > 0 ? Math.round((consecutiveDrawsCount / totalCount) * 100) : 55;
+
+      return {
+        totalCount,
+        recentCount: recentDraws.length,
+        freqAll,
+        freqRecent,
+        avgInterval,
+        currentDrought,
+        reboundRatio,
+        lastDraw,
+        allMeanSum,
+        recentMeanSum,
+        dynamicMeanSum,
+        consecutiveRate
+      };
+    }
+
+    function generateThreeRecommendations(type, round, isCustom, customOffset) {
+      const cfg = LOTTERY_CONFIG[type];
+      const stats = analyzeCumulativeStats(type, round);
+      const cond = APP_STATE.conditions[type];
+
+      const models = [
+        {
+          rank: '第1推奨',
+          title: '長期収束 × 短期モメンタム融合モデル',
+          mode: 'hybrid'
+        },
+        {
+          rank: '第2推奨',
+          title: '全期間未出現周期・リバウンドモデル',
+          mode: 'rebound'
+        },
+        {
+          rank: '第3推奨',
+          title: '最新トレンド＆黄金比バランスモデル',
+          mode: 'harmony'
+        }
+      ];
+
+      return models.map((model, mIdx) => {
+        const seedStr = isCustom
+          ? `custom_${type}_${round}_m${mIdx}_off${customOffset}_${JSON.stringify(cond)}`
+          : `official_${type}_${round}_m${mIdx}_n${stats.totalCount}`;
+        const rng = mulberry32(stringToSeed(seedStr));
+
+        let numbers = [];
+        let rationale = '';
+
+        if (type === 'bingo5') {
+          let bestBoard = null;
+          let bestScore = Infinity;
+
+          for (let attempt = 0; attempt < 35; attempt++) {
+            const temp = [];
+            for (let slot = 0; slot < 8; slot++) {
+              const minV = slot * 5 + 1;
+              const maxV = minV + 4;
+              const fixedVal = isCustom ? cond.axis[slot] : null;
+              const exclVal = isCustom ? cond.exclude[slot] : null;
+
+              if (fixedVal !== null) {
+                temp.push(fixedVal);
+                continue;
+              }
+
+              const candidates = [];
+              const expectedSlotCount = stats.totalCount / 5;
+              for (let n = minV; n <= maxV; n++) {
+                if (n === exclVal) continue;
+                const allCount = stats.freqAll[n] || 0;
+                const convergenceGap = Math.max(0.25, 1 + (expectedSlotCount - allCount) / Math.max(8, expectedSlotCount));
+                const recRate = (stats.freqRecent[n] || 0) / Math.max(1, stats.recentCount);
+                const rebScore = stats.reboundRatio[n] || 1.0;
+                const isPull = stats.lastDraw && stats.lastDraw.main[slot] === n ? 1.28 : 1.0;
+                const isSlide = stats.lastDraw && Math.abs(stats.lastDraw.main[slot] - n) === 1 ? 1.15 : 1.0;
+
+                let weight = 1.0;
+                if (model.mode === 'hybrid') {
+                  weight = convergenceGap * (1 + recRate * 2.2) * isPull * isSlide;
+                } else if (model.mode === 'rebound') {
+                  weight = Math.pow(Math.max(0.5, rebScore), 1.45);
+                } else {
+                  weight = (1 + recRate * 2.5) * isSlide;
+                }
+                weight *= (0.72 + rng() * 0.56);
+                candidates.push({ n, weight });
+              }
+              candidates.sort((a, b) => b.weight - a.weight);
+              temp.push(candidates[0].n);
+            }
+
+            const sum = temp.reduce((a, b) => a + b, 0);
+            const consec = countConsecutivePairs(temp, false);
+            const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+            const sumDiff = Math.abs(sum - targetSum);
+            const targetConsec = model.mode === 'hybrid' ? 1 : 0;
+            const penalty = sumDiff + Math.abs(consec - targetConsec) * 6;
+
+            if (penalty < bestScore) {
+              bestScore = penalty;
+              bestBoard = temp;
+            }
+          }
+          numbers = bestBoard;
+
+          const consecCount = countConsecutivePairs(numbers, false);
+          rationale = model.mode === 'hybrid'
+            ? `全${stats.totalCount}回の長期出現率乖離スコアに、直近30回の引っ張り・隣数字相関とサム中央値（${stats.dynamicMeanSum}）を融合した進化本命盤面。`
+            : model.mode === 'rebound'
+            ? `全${stats.totalCount}回の蓄積データから各枠の実測「平均出現間隔」を超過した限界突破（リバウンド待機）数字を優先抽出した反発狙い盤面。`
+            : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比・隣接連番（${consecCount}組）の偏りをリアルタイム補正した最適バランス盤面。`;
+
+        } else if (type === 'numbers3' || type === 'numbers4') {
+          const axisList = isCustom ? [...cond.axis] : [];
+          const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
+
+          const scoredDigits = [];
+          const expectedDigitCount = (stats.totalCount * cfg.pick) / 10;
+
+          for (let d = 0; d <= 9; d++) {
+            if (excludeSet.has(d)) continue;
+            const allFreq = stats.freqAll[d] || 0;
+            const recFreq = stats.freqRecent[d] || 0;
+            const convergenceGap = Math.max(0.25, 1 + (expectedDigitCount - allFreq) / Math.max(10, expectedDigitCount));
+            const rebScore = stats.reboundRatio[d] || 1.0;
+            const isPull = stats.lastDraw && stats.lastDraw.main.includes(d) ? 1.25 : 1.0;
+            const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - d) === 1) ? 1.15 : 1.0;
+
+            let score = 1.0;
+            if (model.mode === 'hybrid') {
+              score = convergenceGap * (1 + recFreq * 0.14) * isPull * isSlide;
+            } else if (model.mode === 'rebound') {
+              score = Math.pow(Math.max(0.5, rebScore), 1.45);
+            } else {
+              score = (1 + recFreq * 0.18) * isSlide;
+            }
+            score *= (0.75 + rng() * 0.5);
+            scoredDigits.push({ d, score });
+          }
+
+          scoredDigits.sort((a, b) => b.score - a.score);
+          const pool = scoredDigits.slice(0, Math.min(7, scoredDigits.length));
+
+          let bestCombo = null;
+          let bestPenalty = Infinity;
+          const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+
+          for (let attempt = 0; attempt < 45; attempt++) {
+            const temp = [...axisList];
+            while (temp.length < cfg.pick) {
+              const pickObj = pool[Math.floor(rng() * pool.length)];
+              temp.push(pickObj.d);
+            }
+            for (let i = temp.length - 1; i > 0; i--) {
+              const j = Math.floor(rng() * (i + 1));
+              [temp[i], temp[j]] = [temp[j], temp[i]];
+            }
+            const sum = temp.reduce((a, b) => a + b, 0);
+            const consec = countConsecutivePairs(temp, false);
+            const targetConsec = model.mode === 'hybrid' ? 1 : 0;
+            const penalty = Math.abs(sum - targetSum) * 1.4 + Math.abs(consec - targetConsec) * 3.5;
+
+            if (penalty < bestPenalty) {
+              bestPenalty = penalty;
+              bestCombo = temp;
+            }
+          }
+          numbers = bestCombo;
+
+          const consecCount = countConsecutivePairs(numbers, false);
+          const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』をいずれかの桁に配置し、` : '';
+
+          rationale = model.mode === 'hybrid'
+            ? `${axisPrefix}全${stats.totalCount}回の長期出現率乖離に、前回からの引っ張り・隣数字モメンタムと連番（${consecCount}組）を掛け合わせた進化本命配列。`
+            : model.mode === 'rebound'
+            ? `${axisPrefix}全${stats.totalCount}回分の実測「平均出現間隔」を大きく上回って停滞している限界突破数字を優先抽出したリバウンド狙い配列。`
+            : `${axisPrefix}直近30回の合計値移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りをリアルタイム補正した王道バランス配列。`;
+
+        } else {
+          // Loto6, Loto7, MiniLoto
+          const axisList = isCustom ? [...cond.axis] : [];
+          const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
+
+          const scoredNums = [];
+          const expectedCount = (stats.totalCount * cfg.pick) / cfg.max;
+
+          for (let n = cfg.min; n <= cfg.max; n++) {
+            if (excludeSet.has(n)) continue;
+            const allCount = stats.freqAll[n] || 0;
+            const recCount = stats.freqRecent[n] || 0;
+            const convergenceGap = Math.max(0.25, 1 + (expectedCount - allCount) / Math.max(10, expectedCount));
+            const rebScore = stats.reboundRatio[n] || 1.0;
+            const isPull = stats.lastDraw && stats.lastDraw.main.includes(n) ? 1.30 : 1.0;
+            const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - n) === 1) ? 1.18 : 1.0;
+
+            let weight = 1.0;
+            if (model.mode === 'hybrid') {
+              weight = convergenceGap * (1 + recCount * 0.25) * isPull * isSlide;
+            } else if (model.mode === 'rebound') {
+              weight = Math.pow(Math.max(0.5, rebScore), 1.45) * convergenceGap;
+            } else {
+              weight = (1 + recCount * 0.22) * isSlide;
+            }
+            weight *= (0.72 + rng() * 0.56);
+            scoredNums.push({ n, weight });
+          }
+
+          scoredNums.sort((a, b) => b.weight - a.weight);
+          const candidatePool = scoredNums.slice(0, Math.min(scoredNums.length, cfg.pick + 14));
+
+          let bestSet = null;
+          let bestPenalty = Infinity;
+          const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+
+          for (let attempt = 0; attempt < 70; attempt++) {
+            const chosen = new Set(axisList);
+            const shuffled = [...candidatePool];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(rng() * (i + 1));
+              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            if (model.mode !== 'harmony' && chosen.size <= cfg.pick - 2) {
+              for (const item of shuffled) {
+                const nextN = item.n + 1;
+                if (nextN <= cfg.max && !excludeSet.has(nextN) && !chosen.has(item.n) && !chosen.has(nextN)) {
+                  chosen.add(item.n);
+                  chosen.add(nextN);
+                  break;
+                }
+              }
+            }
+
+            for (const item of shuffled) {
+              if (chosen.size >= cfg.pick) break;
+              chosen.add(item.n);
+            }
+
+            const arr = Array.from(chosen).sort((a, b) => a - b);
+            const sum = arr.reduce((a, b) => a + b, 0);
+            const odds = arr.filter(x => x % 2 === 1).length;
+            const idealOdds = Math.round(cfg.pick / 2);
+            const consec = countConsecutivePairs(arr, true);
+
+            const sumPenalty = Math.abs(sum - targetSum) / Math.max(8, targetSum * 0.18);
+            const oddPenalty = Math.abs(odds - idealOdds) * 0.9;
+            const targetConsec = model.mode === 'hybrid' ? 1 : (model.mode === 'rebound' ? 1 : 0);
+            const consecPenalty = Math.abs(consec - targetConsec) * 1.1;
+
+            const totalPenalty = sumPenalty + oddPenalty + consecPenalty;
+
+            if (totalPenalty < bestPenalty) {
+              bestPenalty = totalPenalty;
+              bestSet = arr;
+            }
+          }
+          numbers = bestSet;
+
+          const consecCount = countConsecutivePairs(numbers, true);
+          const pullMatches = stats.lastDraw
+            ? numbers.filter(n => stats.lastDraw.main.includes(n)).length
+            : 0;
+
+          rationale = model.mode === 'hybrid'
+            ? `全${stats.totalCount}回の長期出現率乖離に、直近トレンドの引っ張り（${pullMatches}個）・隣数字モメンタム・連番（${consecCount}組）を融合した進化本命。`
+            : model.mode === 'rebound'
+            ? `全${stats.totalCount}回の蓄積履歴から実測「平均出現間隔」を大きく超過した限界突破（リバウンド待機）数字を優先抽出した反発狙い構成。`
+            : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りをリアルタイム補正して導出した最適バランス構成。`;
+        }
+
+        const sumVal = numbers.reduce((a, b) => a + b, 0);
+        const oddCount = numbers.filter(n => n % 2 === 1).length;
+        const evenCount = numbers.length - oddCount;
+        const consecCount = countConsecutivePairs(numbers, cfg.sorted);
+
+        return {
+          rank: model.rank,
+          title: model.title,
+          numbers,
+          rationale,
+          sumVal,
+          oddEvenStr: `奇${oddCount}:偶${evenCount}`,
+          consecStr: `連番${consecCount}組`,
+          learnedCount: stats.totalCount
+        };
+      });
+    }
+
+    /* ================= RENDERING ================= */
+    function renderAll() {
+      const type = APP_STATE.currentType;
+      const targetRound = APP_STATE.targetRounds[type];
+      const round = APP_STATE.selectedRound;
+      const isTarget = round === targetRound;
+
+      document.querySelectorAll('.lottery-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === type);
+      });
+
+      document.getElementById('roundNumberText').textContent = `第${round}回`;
+      const tagEl = document.getElementById('roundStatusTag');
+      if (isTarget) {
+        tagEl.textContent = '次回購入予測対象';
+        tagEl.className = 'round-tag target';
+      } else {
+        tagEl.textContent = '過去回バックテスト検証';
+        tagEl.className = 'round-tag past';
+      }
+
+      const history = APP_STATE.historyData[type] || [];
+      const minAvailableRound = history.length > 0 ? history[0].round : targetRound - 100;
+      document.getElementById('prevRoundBtn').disabled = round <= minAvailableRound;
+      document.getElementById('nextRoundBtn').disabled = round >= targetRound;
+
+      const latestBtn = document.getElementById('latestRoundBtn');
+      latestBtn.classList.toggle('is-latest', isTarget);
+
+      // Carryover banner for Target Round
+      const coBanner = document.getElementById('carryoverBanner');
+      if (isTarget && (type === 'loto6' || type === 'loto7') && APP_STATE.carryoverInfo[type]?.amount > 0) {
+        coBanner.style.display = 'flex';
+        document.getElementById('carryoverAmountText').textContent =
+          `${APP_STATE.carryoverInfo[type].amount.toLocaleString()}円`;
+      } else {
+        coBanner.style.display = 'none';
+      }
+
+      // Past Official Draw Banner
+      const pastBanner = document.getElementById('pastOfficialBanner');
+      let pastDrawObj = null;
+      if (!isTarget) {
+        pastDrawObj = history.find(d => d.round === round);
+        if (pastDrawObj) {
+          pastBanner.style.display = 'block';
+          document.getElementById('pastBannerTitle').textContent = `🏛 第${round}回 公式確定当選番号`;
+          document.getElementById('pastBannerDate').textContent = `📅 ${pastDrawObj.date}`;
+
+          const coExactEl = document.getElementById('pastBannerCarryover');
+          if ((type === 'loto6' || type === 'loto7') && pastDrawObj.carryover > 0) {
+            coExactEl.style.display = 'block';
+            coExactEl.textContent = `👑 キャリーオーバー ${pastDrawObj.carryover.toLocaleString()}円`;
+          } else {
+            coExactEl.style.display = 'none';
+          }
+
+          document.getElementById('pastOfficialNumbersArea').innerHTML = renderPastDrawVisual(type, pastDrawObj);
+        } else {
+          pastBanner.style.display = 'none';
+        }
+      } else {
+        pastBanner.style.display = 'none';
+      }
+
+      renderConditionPad();
+      updateConditionSummaryPill();
+
+      const recs = generateThreeRecommendations(type, round, APP_STATE.isCustomMode, APP_STATE.customSeedOffset);
+      renderPredictionCards(recs, pastDrawObj);
+    }
+
+    function renderPastDrawVisual(type, draw) {
+      if (type === 'bingo5') {
+        const n = draw.main;
+        const cells = [
+          n[0], n[1], n[2],
+          n[3], 'FREE', n[4],
+          n[5], n[6], n[7]
+        ];
+        return `
+          <div style="display:flex; justify-content:center; padding:4px 0;">
+            <div class="bingo-mini-3x3" style="grid-template-columns:repeat(3,36px); grid-template-rows:repeat(3,36px);">
+              ${cells.map(v => v === 'FREE'
+                ? `<div class="bingo-mini-cell free" style="font-size:10px;">FREE</div>`
+                : `<div class="bingo-mini-cell" style="font-size:13px;">${String(v).padStart(2, '0')}</div>`
+              ).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      const mainCoins = draw.main.map(num => {
+        const disp = (type === 'numbers3' || type === 'numbers4') ? String(num) : String(num).padStart(2, '0');
+        return `<span class="gold-coin" style="width:33px; height:33px; font-size:14px;">${disp}</span>`;
+      }).join('');
+
+      let bonusHtml = '';
+      if (draw.bonus && draw.bonus.length > 0) {
+        const bStr = draw.bonus.map(b => String(b).padStart(2, '0')).join(', ');
+        bonusHtml = `<span class="bonus-inline-label">ボーナス: (${bStr})</span>`;
+      }
+
+      return `<div class="coins-row" style="margin-bottom:0;">${mainCoins}${bonusHtml}</div>`;
+    }
+
+    function renderPredictionCards(recs, pastDrawObj) {
+      const type = APP_STATE.currentType;
+      const cond = APP_STATE.conditions[type];
+      const container = document.getElementById('resultsContainer');
+
+      const isBingoAll8Fixed = type === 'bingo5' && APP_STATE.isCustomMode && cond.axis.every(x => x !== null);
+      const bingoNoticeBanner = isBingoAll8Fixed
+        ? `<div style="background:#FFF7DF; border:1.5px solid #C5962B; color:#7C1111; font-size:11.5px; font-weight:800; padding:7px 10px; border-radius:8px; text-align:center;">※全8枠を軸固定したため、3口すべて同一の確定目を表示しています</div>`
+        : '';
+
+      const cardsHtml = recs.map((rec, idx) => {
+        let numbersHtml = '';
+
+        if (type === 'bingo5') {
+          const n = rec.numbers;
+          const gridVals = [
+            { v: n[0], slot: 0 }, { v: n[1], slot: 1 }, { v: n[2], slot: 2 },
+            { v: n[3], slot: 3 }, { v: 'FREE', slot: -1 }, { v: n[4], slot: 4 },
+            { v: n[5], slot: 5 }, { v: n[6], slot: 6 }, { v: n[7], slot: 7 }
+          ];
+          const boardHtml = gridVals.map(cell => {
+            if (cell.v === 'FREE') {
+              return `<div class="bingo-cell free-cell">FREE</div>`;
+            }
+            const isAxis = APP_STATE.isCustomMode && cond.axis[cell.slot] === cell.v;
+            const isHit = pastDrawObj && pastDrawObj.main[cell.slot] === cell.v;
+            const cls = ['bingo-cell', isAxis ? 'is-axis' : '', isHit ? 'hit-main' : ''].filter(Boolean).join(' ');
+            return `<div class="${cls}">${String(cell.v).padStart(2, '0')}</div>`;
+          }).join('');
+
+          numbersHtml = `
+            <div class="bingo-3x3-wrap">
+              <div class="bingo-3x3-board">${boardHtml}</div>
+              <div style="font-size:11.5px; color:var(--ink-muted); line-height:1.5;">
+                <div>中央<strong>FREE</strong>を軸に</div>
+                <div>8ライン成立を最適化</div>
+                ${pastDrawObj ? `<div style="color:var(--crimson); font-weight:800; margin-top:3px;">赤丸＝公式当選一致</div>` : ''}
+              </div>
+            </div>
+          `;
+        } else {
+          const coins = rec.numbers.map((num, posIdx) => {
+            const disp = (type === 'numbers3' || type === 'numbers4') ? String(num) : String(num).padStart(2, '0');
+            const isAxis = APP_STATE.isCustomMode && cond.axis.includes(num);
+            let isMainHit = false;
+            let isBonusHit = false;
+
+            if (pastDrawObj) {
+              if (type === 'numbers3' || type === 'numbers4') {
+                isMainHit = pastDrawObj.main[posIdx] === num;
+              } else {
+                isMainHit = pastDrawObj.main.includes(num);
+                if (!isMainHit && pastDrawObj.bonus && pastDrawObj.bonus.includes(num)) {
+                  isBonusHit = true;
+                }
+              }
+            }
+
+            const cls = [
+              'gold-coin',
+              isAxis ? 'is-axis' : '',
+              isMainHit ? 'hit-main' : '',
+              isBonusHit ? 'hit-bonus' : ''
+            ].filter(Boolean).join(' ');
+
+            return `<span class="${cls}">${disp}</span>`;
+          }).join('');
+
+          numbersHtml = `<div class="coins-row">${coins}</div>`;
+        }
+
+        const modeBadge = APP_STATE.isCustomMode
+          ? `<span class="mode-pill custom">条件反映・再抽選</span>`
+          : `<span class="mode-pill official">公式本命（全${rec.learnedCount}回学習）</span>`;
+
+        // ナンバーズ3・4のときだけ買い方セレクターを表示
+        let betTypeSelectHtml = '';
+        if (type === 'numbers3') {
+          betTypeSelectHtml = `
+            <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ3買い方">
+              <option value="ボックス">ボックス</option>
+              <option value="ストレート">ストレート</option>
+              <option value="セット">セット</option>
+              <option value="ミニ">ミニ</option>
+            </select>
+          `;
+        } else if (type === 'numbers4') {
+          betTypeSelectHtml = `
+            <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ4買い方">
+              <option value="ボックス">ボックス</option>
+              <option value="ストレート">ストレート</option>
+              <option value="セット">セット</option>
+            </select>
+          `;
+        }
+
+        return `
+          <article class="prediction-card">
+            <div class="pred-card-header">
+              <div class="pred-rank-title">
+                <span class="rank-badge">${rec.rank}</span>
+                <span>${rec.title}</span>
+              </div>
+              ${modeBadge}
+            </div>
+            ${numbersHtml}
+            <div class="rationale-box">${rec.rationale}</div>
+            <div class="card-footer-row">
+              <div class="stat-chips">
+                <span class="stat-chip">サム値: ${rec.sumVal}</span>
+                <span class="stat-chip">${rec.oddEvenStr}</span>
+                <span class="stat-chip">${rec.consecStr}</span>
+              </div>
+              <div class="save-action-group">
+                ${betTypeSelectHtml}
+                <button type="button" class="save-ticket-btn" data-save-idx="${idx}">＋ 購入台帳に記録</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      container.innerHTML = bingoNoticeBanner + cardsHtml;
+
+      container.querySelectorAll('.save-ticket-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = Number(btn.dataset.saveIdx);
+          const selEl = document.getElementById(`betSelect_${i}`);
+          const betType = selEl ? selEl.value : null;
+          saveTicketToLedger(recs[i], betType);
+        });
+      });
+    }
+
+    /* ================= CONDITION PAD (3x3 BINGO & AUTO-SWITCH LIMITS) ================= */
+    function renderConditionPad() {
+      const type = APP_STATE.currentType;
+      const cfg = LOTTERY_CONFIG[type];
+      const cond = APP_STATE.conditions[type];
+      const guideEl = document.getElementById('conditionGuideText');
+      const fullNoticeEl = document.getElementById('bingoFullAxisNotice');
+      const padContainer = document.getElementById('conditionPadContainer');
+
+      if (type === 'bingo5') {
+        guideEl.innerHTML = `<strong>【${cfg.name} 3×3盤面・最適リミッター】</strong>各枠ごとに<strong>軸固定1個まで・除外1個まで</strong>設定可能。軸上限時は別数字タップで自動除外へ切り替わります。`;
+        const allFixed = cond.axis.every(x => x !== null);
+        fullNoticeEl.style.display = allFixed ? 'block' : 'none';
+
+        const gridLayout = [0, 1, 2, 3, -1, 4, 5, 6, 7];
+        let html = '<div class="bingo-cond-3x3">';
+
+        gridLayout.forEach(slot => {
+          if (slot === -1) {
+            html += `
+              <div class="bingo-cond-slot free-slot">
+                <div style="font-family:'Cinzel',serif; font-size:15px; font-weight:800;">FREE</div>
+                <div style="font-size:9.5px; opacity:0.85; margin-top:2px;">中央固定マス</div>
+              </div>
+            `;
+            return;
+          }
+          const minV = slot * 5 + 1;
+          let btns = '';
+          for (let n = minV; n < minV + 5; n++) {
+            const isAxis = cond.axis[slot] === n;
+            const isExcl = cond.exclude[slot] === n;
+            const cls = ['bingo-mini-tap', isAxis ? 'state-axis' : '', isExcl ? 'state-exclude' : ''].filter(Boolean).join(' ');
+            btns += `<div class="${cls}" data-slot="${slot}" data-num="${n}">${String(n).padStart(2, '0')}</div>`;
+          }
+          html += `
+            <div class="bingo-cond-slot">
+              <div class="bingo-slot-head">第${slot + 1}枠</div>
+              <div class="bingo-slot-btns">${btns}</div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        padContainer.innerHTML = html;
+
+        padContainer.querySelectorAll('.bingo-mini-tap').forEach(cell => {
+          cell.addEventListener('click', () => {
+            const slot = Number(cell.dataset.slot);
+            const num = Number(cell.dataset.num);
+            handleBingoPadTap(slot, num);
+          });
+        });
+
+      } else {
+        fullNoticeEl.style.display = 'none';
+        guideEl.innerHTML = `<strong>【${cfg.name} 最適リミッター】</strong><strong>軸固定は最大${cfg.maxAxis}個・除外は最大${cfg.maxExclude}個</strong>まで。軸固定が満員の状態で別数字をタップすると自動的に「除外(赤)」へ切り替わります。`;
+        const isDigits = (type === 'numbers3' || type === 'numbers4');
+        let cells = '';
+        for (let n = cfg.min; n <= cfg.max; n++) {
+          const isAxis = cond.axis.includes(n);
+          const isExcl = cond.exclude.includes(n);
+          const cls = ['pad-cell', isAxis ? 'state-axis' : '', isExcl ? 'state-exclude' : ''].filter(Boolean).join(' ');
+          const label = isDigits ? String(n) : String(n).padStart(2, '0');
+          cells += `<div class="${cls}" data-num="${n}">${label}</div>`;
+        }
+        padContainer.innerHTML = `<div class="num-pad-grid ${isDigits ? 'digits-10' : ''}">${cells}</div>`;
+
+        padContainer.querySelectorAll('.pad-cell').forEach(cell => {
+          cell.addEventListener('click', () => {
+            const num = Number(cell.dataset.num);
+            handleStandardPadTap(num);
+          });
+        });
+      }
+    }
+
+    function handleStandardPadTap(num) {
+      const type = APP_STATE.currentType;
+      const cfg = LOTTERY_CONFIG[type];
+      const cond = APP_STATE.conditions[type];
+
+      const axisIdx = cond.axis.indexOf(num);
+      const exclIdx = cond.exclude.indexOf(num);
+
+      if (axisIdx !== -1) {
+        cond.axis.splice(axisIdx, 1);
+        if (cond.exclude.length < cfg.maxExclude) {
+          cond.exclude.push(num);
+        } else {
+          showToast(`除外は最大${cfg.maxExclude}個までのため解除しました`);
+        }
+      } else if (exclIdx !== -1) {
+        cond.exclude.splice(exclIdx, 1);
+      } else {
+        if (cond.axis.length < cfg.maxAxis) {
+          cond.axis.push(num);
+        } else if (cond.exclude.length < cfg.maxExclude) {
+          cond.exclude.push(num);
+        } else {
+          showToast(`軸固定(最大${cfg.maxAxis})・除外(最大${cfg.maxExclude})ともに上限です`);
+          return;
+        }
+      }
+
+      renderConditionPad();
+      updateConditionSummaryPill();
+    }
+
+    function handleBingoPadTap(slot, num) {
+      const cond = APP_STATE.conditions.bingo5;
+      if (cond.axis[slot] === num) {
+        cond.axis[slot] = null;
+        cond.exclude[slot] = num;
+      } else if (cond.exclude[slot] === num) {
+        cond.exclude[slot] = null;
+      } else {
+        if (cond.axis[slot] === null) {
+          cond.axis[slot] = num;
+        } else if (cond.exclude[slot] === null) {
+          cond.exclude[slot] = num;
+        } else {
+          showToast(`第${slot + 1}枠は軸(1)・除外(1)ともに上限です`);
+          return;
+        }
+      }
+      renderConditionPad();
+      updateConditionSummaryPill();
+    }
+
+    function updateConditionSummaryPill() {
+      const type = APP_STATE.currentType;
+      const cond = APP_STATE.conditions[type];
+      const pill = document.getElementById('conditionSummaryPill');
+      const isOpen = document.getElementById('conditionDrawer').classList.contains('open');
+      const arrow = isOpen ? '▲' : '▼';
+
+      if (type === 'bingo5') {
+        const aCnt = cond.axis.filter(x => x !== null).length;
+        const eCnt = cond.exclude.filter(x => x !== null).length;
+        pill.textContent = (aCnt + eCnt > 0) ? `軸${aCnt}・除${eCnt} ${arrow}` : `設定なし ${arrow}`;
+      } else {
+        const aCnt = cond.axis.length;
+        const eCnt = cond.exclude.length;
+        pill.textContent = (aCnt + eCnt > 0) ? `軸${aCnt}・除${eCnt} ${arrow}` : `設定なし ${arrow}`;
+      }
+    }
+
+    /* ================= PAST 100 DRAWS LEDGER MODAL ================= */
+    function openHistoryModal() {
+      const type = APP_STATE.currentType;
+      const cfg = LOTTERY_CONFIG[type];
+      const history = APP_STATE.historyData[type] || [];
+      const recent100 = history.slice(-100).reverse();
+
+      document.getElementById('historyModalTitle').textContent = `📜 ${cfg.name} 過去100回 当選番号台帳`;
+      const body = document.getElementById('historyModalBody');
+
+      body.innerHTML = recent100.map(item => {
+        let numsDisplay = '';
+        if (type === 'bingo5') {
+          const n = item.main;
+          const cells = [n[0], n[1], n[2], n[3], 'FREE', n[4], n[5], n[6], n[7]];
+          numsDisplay = `
+            <div class="bingo-mini-3x3" style="margin-top:3px;">
+              ${cells.map(v => v === 'FREE'
+                ? `<div class="bingo-mini-cell free">FREE</div>`
+                : `<div class="bingo-mini-cell">${String(v).padStart(2, '0')}</div>`
+              ).join('')}
+            </div>
+          `;
+        } else {
+          const mainStr = (type === 'numbers3' || type === 'numbers4')
+            ? item.main.join(' - ')
+            : item.main.map(v => String(v).padStart(2, '0')).join(' - ');
+          const bonusStr = (item.bonus && item.bonus.length > 0)
+            ? `<span class="history-bonus">B: (${item.bonus.map(b => String(b).padStart(2, '0')).join(', ')})</span>`
+            : '';
+          numsDisplay = `<div class="history-nums">${mainStr}${bonusStr}</div>`;
+        }
+
+        const coBadge = ((type === 'loto6' || type === 'loto7') && item.carryover > 0)
+          ? `<span class="co-mini-badge">👑 CO ${item.carryoverShort}</span>`
+          : '';
+
+        return `
+          <div class="history-item">
+            <div>
+              <div class="history-meta">
+                <span class="history-round">第${item.round}回</span>
+                <span class="history-date">📅 ${item.date}</span>
+                ${coBadge}
+              </div>
+              ${numsDisplay}
+            </div>
+            <button type="button" class="verify-jump-btn" data-jump-round="${item.round}">🔍 検証</button>
+          </div>
+        `;
+      }).join('');
+
+      body.querySelectorAll('.verify-jump-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          APP_STATE.selectedRound = Number(btn.dataset.jumpRound);
+          closeModal('historyModal');
+          renderAll();
+          showToast(`第${APP_STATE.selectedRound}回の公式結果と予測照合を表示しました`);
+        });
+      });
+
+      document.getElementById('historyModal').classList.add('open');
+    }
+
+    /* ================= TICKET LEDGER (BACKUP + BET-TYPE AWARE MATCHING) ================= */
+    function saveTicketToLedger(rec, betType) {
+      const type = APP_STATE.currentType;
+      const cfg = LOTTERY_CONFIG[type];
+      const ticket = {
+        id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+        type,
+        typeName: cfg.name,
+        round: APP_STATE.selectedRound,
+        rank: rec.rank,
+        betType: betType || null,
+        numbers: [...rec.numbers],
+        savedAt: formatDateWithWeekday(new Date())
+      };
+      APP_STATE.tickets.unshift(ticket);
+      persistTickets();
+      updateLedgerBadge();
+      const betLabel = ticket.betType ? `【${ticket.betType}】` : '';
+      showToast(`📒 ${cfg.name} 第${ticket.round}回（${rec.rank}）${betLabel}を購入台帳に記録しました`);
+    }
+
+    function persistTickets() {
+      try {
+        localStorage.setItem('lottery_pred_tickets_v2', JSON.stringify(APP_STATE.tickets));
+      } catch (e) {}
+    }
+
+    function updateLedgerBadge() {
+      document.getElementById('ledgerCountBadge').textContent = APP_STATE.tickets.length;
+    }
+
+    function exportBackupCode() {
+      if (APP_STATE.tickets.length === 0) {
+        showToast('バックアップする購入記録がまだありません');
+        return;
+      }
+      try {
+        const jsonStr = JSON.stringify(APP_STATE.tickets);
+        const encoded = 'LOTTO_BK_' + btoa(unescape(encodeURIComponent(jsonStr)));
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(encoded).then(() => {
+            showToast('📋 バックアップコードをコピーしました（LINEメモ等に保存可）');
+          }).catch(() => fallbackCopyText(encoded));
+        } else {
+          fallbackCopyText(encoded);
+        }
+      } catch (e) {
+        showToast('バックアップ作成に失敗しました');
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('📋 バックアップコードをコピーしました');
+    }
+
+    function importBackupCode(rawCode) {
+      const trimmed = (rawCode || '').trim();
+      if (!trimmed.startsWith('LOTTO_BK_')) {
+        showToast('正しいバックアップコード（LOTTO_BK_...）を貼り付けてください');
+        return;
+      }
+      try {
+        const b64 = trimmed.replace('LOTTO_BK_', '');
+        const jsonStr = decodeURIComponent(escape(atob(b64)));
+        const parsed = JSON.parse(jsonStr);
+        if (!Array.isArray(parsed)) throw new Error('Invalid format');
+
+        const existingIds = new Set(APP_STATE.tickets.map(t => t.id));
+        let restoredCount = 0;
+        parsed.forEach(item => {
+          if (item && item.id && !existingIds.has(item.id)) {
+            APP_STATE.tickets.push(item);
+            restoredCount++;
+          }
+        });
+        persistTickets();
+        updateLedgerBadge();
+        openLedgerModal();
+        showToast(`📥 ${restoredCount}件の購入記録を復元・最新結果と再照合しました`);
+      } catch (e) {
+        showToast('バックアップコードの復元に失敗しました');
+      }
+    }
+
+    function evaluateTicketMatch(ticket) {
+      const history = APP_STATE.historyData[ticket.type] || [];
+      const official = history.find(d => d.round === ticket.round);
+      if (!official) {
+        return { status: 'pending', label: '抽選待ち（未確定）', official: null };
+      }
+
+      const type = ticket.type;
+      if (type === 'numbers3' || type === 'numbers4') {
+        let straightHits = 0;
+        ticket.numbers.forEach((n, idx) => {
+          if (official.main[idx] === n) straightHits++;
+        });
+        const isStraight = straightHits === ticket.numbers.length;
+        const sortedUser = [...ticket.numbers].sort().join(',');
+        const sortedOff = [...official.main].sort().join(',');
+        const isBox = sortedUser === sortedOff;
+        const isMini = type === 'numbers3' && ticket.numbers[1] === official.main[1] && ticket.numbers[2] === official.main[2];
+
+        const bt = ticket.betType;
+
+        if (bt === 'ストレート') {
+          if (isStraight) return { status: 'win', label: '🎉 ストレート当選！', official };
+          if (isBox) return { status: 'lose', label: '惜敗（ボックス一致／ストレート購入）', official };
+          if (isMini) return { status: 'lose', label: '惜敗（下2桁一致／ストレート購入）', official };
+          return { status: 'lose', label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（0桁一致）', official };
+        }
+
+        if (bt === 'ボックス') {
+          if (isStraight) return { status: 'win', label: '🎉 ボックス当選！（数字・並び完全一致）', official };
+          if (isBox) return { status: 'win', label: '🎉 ボックス当選！', official };
+          return { status: 'lose', label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（不一致）', official };
+        }
+
+        if (bt === 'セット') {
+          if (isStraight) return { status: 'win', label: '🎉 セット（ストレート）当選！', official };
+          if (isBox) return { status: 'win', label: '🎉 セット（ボックス）当選！', official };
+          return { status: 'lose', label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（不一致）', official };
+        }
+
+        if (bt === 'ミニ') {
+          if (isMini) return { status: 'win', label: '🎉 ミニ当選（下2桁一致）！', official };
+          return { status: 'lose', label: '落選（下2桁不一致）', official };
+        }
+
+        // 旧記録（買い方未指定データ）との後方互換
+        if (isStraight) return { status: 'win', label: '🎉 ストレート当選！', official };
+        if (isBox) return { status: 'win', label: '🎉 ボックス当選！', official };
+        if (isMini) return { status: 'win', label: '🎉 ミニ当選（下2桁）！', official };
+        return {
+          status: 'lose',
+          label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（0桁一致）',
+          official
+        };
+      }
+
+      if (type === 'bingo5') {
+        let slotHits = 0;
+        ticket.numbers.forEach((n, idx) => {
+          if (official.main[idx] === n) slotHits++;
+        });
+        const lines = [
+          [0, 1, 2], [5, 6, 7],
+          [0, 3, 5], [2, 4, 7],
+          [3, 4], [1, 6], [0, 7], [2, 5]
+        ];
+        let bingoLines = 0;
+        lines.forEach(line => {
+          if (line.every(idx => ticket.numbers[idx] === official.main[idx])) {
+            bingoLines++;
+          }
+        });
+        if (bingoLines > 0) {
+          return { status: 'win', label: `🎉 ${bingoLines}ライン ビンゴ当選！（${slotHits}マス一致）`, official };
+        }
+        return {
+          status: 'lose',
+          label: `落選（${slotHits}マス一致 / 0ライン）`,
+          official
+        };
+      }
+
+      const mainHits = ticket.numbers.filter(n => official.main.includes(n)).length;
+      const bonusHits = (official.bonus || []).filter(b => ticket.numbers.includes(b)).length;
+
+      let tierText = '';
+      if (type === 'loto6') {
+        if (mainHits === 6) tierText = '🎉 1等当選！';
+        else if (mainHits === 5 && bonusHits >= 1) tierText = '🎉 2等当選！';
+        else if (mainHits === 5) tierText = '🎉 3等当選！';
+        else if (mainHits === 4) tierText = '🎉 4等当選！';
+        else if (mainHits === 3) tierText = '🎉 5等当選！';
+      } else if (type === 'loto7') {
+        if (mainHits === 7) tierText = '🎉 1等当選！';
+        else if (mainHits === 6 && bonusHits >= 1) tierText = '🎉 2等当選！';
+        else if (mainHits === 6) tierText = '🎉 3等当選！';
+        else if (mainHits === 5) tierText = '🎉 4等当選！';
+        else if (mainHits === 4) tierText = '🎉 5等当選！';
+        else if (mainHits === 3 && bonusHits >= 1) tierText = '🎉 6等当選！';
+      } else if (type === 'miniloto') {
+        if (mainHits === 5) tierText = '🎉 1等当選！';
+        else if (mainHits === 4 && bonusHits >= 1) tierText = '🎉 2等当選！';
+        else if (mainHits === 4) tierText = '🎉 3等当選！';
+        else if (mainHits === 3) tierText = '🎉 4等当選！';
+      }
+
+      if (tierText) {
+        return { status: 'win', label: `${tierText}（本${mainHits}${bonusHits ? `+B${bonusHits}` : ''}）`, official };
+      }
+      return {
+        status: 'lose',
+        label: `落選（本数字${mainHits}個${bonusHits ? `・B${bonusHits}個` : ''}一致）`,
+        official
+      };
+    }
+
+    function openLedgerModal() {
+      const body = document.getElementById('ledgerModalBody');
+
+      const backupSectionHtml = `
+        <div class="backup-panel">
+          <div class="backup-title">💾 端末容量ゼロ・クリップボード式データ保全</div>
+          <div class="backup-btn-row">
+            <button type="button" class="backup-action-btn" id="btnExportBackup">📋 バックアップコピー</button>
+            <button type="button" class="backup-action-btn" id="btnToggleRestore">📥 コードから復元</button>
+          </div>
+          <div class="restore-box" id="restoreInputBox">
+            <textarea class="restore-textarea" id="restoreCodeInput" placeholder="ここに LOTTO_BK_... で始まるバックアップコードを貼り付けてください"></textarea>
+            <button type="button" class="restore-exec-btn" id="btnExecRestore">復元して最新当選結果と再照合</button>
+          </div>
+        </div>
+      `;
+
+      if (APP_STATE.tickets.length === 0) {
+        body.innerHTML = backupSectionHtml + `<div style="text-align:center; padding:24px 12px; color:var(--ink-muted); font-size:13px;">まだ購入台帳に記録された買い目はありません。<br>予測カードの「＋ 購入台帳に記録」から保存できます。</div>`;
+        bindLedgerModalEvents();
+        document.getElementById('ledgerModal').classList.add('open');
+        return;
+      }
+
+      const ticketsHtml = APP_STATE.tickets.map(ticket => {
+        const evalRes = evaluateTicketMatch(ticket);
+        const off = evalRes.official;
+        const type = ticket.type;
+
+        let userVisualHtml = '';
+        let officialRefHtml = '';
+
+        if (type === 'bingo5') {
+          const n = ticket.numbers;
+          const cells = [
+            { v: n[0], slot: 0 }, { v: n[1], slot: 1 }, { v: n[2], slot: 2 },
+            { v: n[3], slot: 3 }, { v: 'FREE', slot: -1 }, { v: n[4], slot: 4 },
+            { v: n[5], slot: 5 }, { v: n[6], slot: 6 }, { v: n[7], slot: 7 }
+          ];
+          userVisualHtml = `
+            <div style="margin:6px 0;">
+              <div class="bingo-mini-3x3">
+                ${cells.map(c => {
+                  if (c.v === 'FREE') return `<div class="bingo-mini-cell free">FREE</div>`;
+                  const isHit = off && off.main[c.slot] === c.v;
+                  return `<div class="bingo-mini-cell ${isHit ? 'hit-cell' : ''}">${String(c.v).padStart(2, '0')}</div>`;
+                }).join('')}
+              </div>
+            </div>
+          `;
+          if (off) {
+            const on = off.main;
+            const oCells = [on[0], on[1], on[2], on[3], 'FREE', on[4], on[5], on[6], on[7]];
+            officialRefHtml = `
+              <div class="ledger-official-ref">
+                <div style="margin-bottom:4px; font-weight:700;">公式当選（📅 ${off.date}）：</div>
+                <div class="bingo-mini-3x3">
+                  ${oCells.map(v => v === 'FREE'
+                    ? `<div class="bingo-mini-cell free">FREE</div>`
+                    : `<div class="bingo-mini-cell">${String(v).padStart(2, '0')}</div>`
+                  ).join('')}
+                </div>
+              </div>
+            `;
+          }
+        } else {
+          const coinsHtml = ticket.numbers.map((num, idx) => {
+            const disp = (type === 'numbers3' || type === 'numbers4') ? String(num) : String(num).padStart(2, '0');
+            let isMainHit = false;
+            let isBonusHit = false;
+            if (off) {
+              if (type === 'numbers3' || type === 'numbers4') {
+                if (ticket.betType === 'ボックス' || ticket.betType === 'セット') {
+                  isMainHit = off.main.includes(num);
+                } else if (ticket.betType === 'ミニ' && type === 'numbers3') {
+                  isMainHit = (idx === 1 || idx === 2) && off.main[idx] === num;
+                } else {
+                  isMainHit = off.main[idx] === num;
+                }
+              } else {
+                isMainHit = off.main.includes(num);
+                if (!isMainHit && off.bonus && off.bonus.includes(num)) {
+                  isBonusHit = true;
+                }
+              }
+            }
+            const cls = ['ledger-coin', isMainHit ? 'hit-main' : '', isBonusHit ? 'hit-bonus' : ''].filter(Boolean).join(' ');
+            return `<span class="${cls}">${disp}</span>`;
+          }).join('');
+
+          userVisualHtml = `<div class="ledger-coins-row">${coinsHtml}</div>`;
+
+          if (off) {
+            const offMainStr = (type === 'numbers3' || type === 'numbers4')
+              ? off.main.join(' - ')
+              : off.main.map(v => String(v).padStart(2, '0')).join(' - ');
+            const offBonusStr = (off.bonus && off.bonus.length > 0)
+              ? `　B: (${off.bonus.map(b => String(b).padStart(2, '0')).join(', ')})`
+              : '';
+            officialRefHtml = `
+              <div class="ledger-official-ref">
+                <strong>公式当選（📅 ${off.date}）：</strong>${offMainStr}${offBonusStr}
+              </div>
+            `;
+          }
+        }
+
+        const betTagHtml = ticket.betType
+          ? `<span class="bet-mode-tag">${ticket.betType}</span>`
+          : '';
+
+        return `
+          <div class="ticket-item">
+            <div class="ticket-top">
+              <span class="ticket-title">${ticket.typeName} 第${ticket.round}回（${ticket.rank}）${betTagHtml}</span>
+              <span class="ticket-status-badge ${evalRes.status}">${evalRes.label}</span>
+            </div>
+            ${userVisualHtml}
+            ${officialRefHtml}
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+              <span style="font-size:10.5px; color:var(--ink-muted);">記録日: ${ticket.savedAt}</span>
+              <button type="button" class="ticket-del-btn" data-del-id="${ticket.id}">削除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      body.innerHTML = backupSectionHtml + ticketsHtml;
+      bindLedgerModalEvents();
+      document.getElementById('ledgerModal').classList.add('open');
+    }
+
+    function bindLedgerModalEvents() {
+      const body = document.getElementById('ledgerModalBody');
+      const btnExp = document.getElementById('btnExportBackup');
+      const btnTog = document.getElementById('btnToggleRestore');
+      const btnExec = document.getElementById('btnExecRestore');
+
+      if (btnExp) btnExp.addEventListener('click', exportBackupCode);
+      if (btnTog) {
+        btnTog.addEventListener('click', () => {
+          document.getElementById('restoreInputBox').classList.toggle('open');
+        });
+      }
+      if (btnExec) {
+        btnExec.addEventListener('click', () => {
+          const val = document.getElementById('restoreCodeInput').value;
+          importBackupCode(val);
+        });
+      }
+
+      body.querySelectorAll('.ticket-del-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.delId;
+          APP_STATE.tickets = APP_STATE.tickets.filter(t => t.id !== id);
+          persistTickets();
+          updateLedgerBadge();
+          openLedgerModal();
+        });
+      });
+    }
+
+    /* ================= 14-DAY LUCKY CALENDAR MODAL ================= */
+    function openCalendarModal() {
+      const rokuyoNames = ['大安', '赤口', '先勝', '友引', '先負', '仏滅'];
+      const body = document.getElementById('calendarModalBody');
+      const today = new Date();
+      let html = '<div class="calendar-list">';
+
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        const dateLabel = formatDateWithWeekday(d);
+        const dayIndex = Math.floor(d.getTime() / 86400000);
+        const rokuyo = rokuyoNames[(dayIndex + d.getMonth()) % 6];
+
+        const tags = [];
+        if ((dayIndex % 6 === 0) || (dayIndex % 11 === 2)) tags.push('一粒万倍日');
+        if (dayIndex % 13 === 4) tags.push('寅の日');
+        if (dayIndex % 12 === 7) tags.push('巳の日');
+        if (dayIndex % 60 === 18) tags.push('天赦日');
+
+        const isSuper = rokuyo === '大安' || tags.length > 0;
+
+        html += `
+          <div class="cal-row ${isSuper ? 'super-lucky' : ''}">
+            <span class="cal-date-str">${dateLabel}</span>
+            <div class="cal-badges">
+              ${tags.map(t => `<span class="auspicious-tag">✨ ${t}</span>`).join('')}
+              <span class="rokuyo-pill ${rokuyo === '大安' ? 'taian' : ''}">${rokuyo}</span>
+            </div>
+          </div>
+        `;
+      }
+      html += '</div>';
+      body.innerHTML = html;
+      document.getElementById('calendarModal').classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toastBanner');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => el.classList.remove('show'), 2600);
+    }
+
+    /* ================= EVENT LISTENERS ================= */
+    document.querySelectorAll('.lottery-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        APP_STATE.currentType = btn.dataset.type;
+        APP_STATE.selectedRound = APP_STATE.targetRounds[APP_STATE.currentType];
+        APP_STATE.isCustomMode = false;
+        APP_STATE.customSeedOffset = 0;
+        updateSyncStatusUI();
+        renderAll();
+      });
+    });
+
+    document.getElementById('prevRoundBtn').addEventListener('click', () => {
+      APP_STATE.selectedRound--;
+      renderAll();
+    });
+
+    document.getElementById('nextRoundBtn').addEventListener('click', () => {
+      const target = APP_STATE.targetRounds[APP_STATE.currentType];
+      if (APP_STATE.selectedRound < target) {
+        APP_STATE.selectedRound++;
+        renderAll();
+      }
+    });
+
+    document.getElementById('latestRoundBtn').addEventListener('click', () => {
+      APP_STATE.selectedRound = APP_STATE.targetRounds[APP_STATE.currentType];
+      renderAll();
+      showToast(`最新購入対象（第${APP_STATE.selectedRound}回）へ戻りました`);
+    });
+
+    document.getElementById('toggleConditionBtn').addEventListener('click', () => {
+      document.getElementById('conditionDrawer').classList.toggle('open');
+      updateConditionSummaryPill();
+    });
+
+    document.getElementById('clearConditionsBtn').addEventListener('click', () => {
+      const type = APP_STATE.currentType;
+      if (type === 'bingo5') {
+        APP_STATE.conditions.bingo5 = { axis: Array(8).fill(null), exclude: Array(8).fill(null) };
+      } else {
+        APP_STATE.conditions[type] = { axis: [], exclude: [] };
+      }
+      renderConditionPad();
+      updateConditionSummaryPill();
+      showToast('指定条件をすべて解除しました');
+    });
+
+    document.getElementById('runPredictBtn').addEventListener('click', () => {
+      APP_STATE.isCustomMode = true;
+      APP_STATE.customSeedOffset += 1;
+      renderAll();
+      showToast('ハイブリッド統計＆指定条件を反映した再抽選を実行しました');
+    });
+
+    document.getElementById('resetOfficialBtn').addEventListener('click', () => {
+      APP_STATE.isCustomMode = false;
+      APP_STATE.customSeedOffset = 0;
+      renderAll();
+      showToast('全期間累積統計の「公式本命」へ戻しました');
+    });
+
+    document.getElementById('openHistoryBtn').addEventListener('click', openHistoryModal);
+    document.getElementById('openLedgerBtn').addEventListener('click', openLedgerModal);
+    document.getElementById('openCalendarBtn').addEventListener('click', openCalendarModal);
+
+    document.querySelectorAll('.modal-close-btn').forEach(btn => {
+      btn.addEventListener('click', () => closeModal(btn.dataset.close));
+    });
+
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) backdrop.classList.remove('open');
+      });
+    });
+
+    // Boot
+    initializeData();
+  </script>
+</body>
+</html>
