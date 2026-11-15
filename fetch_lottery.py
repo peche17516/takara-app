@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 全期間累積型・宝くじ当選番号自動収集スクリプト (fetch_lottery.py)
-【海外IPブロック回避・国内公開アーカイブ直結・全期間累積版】
+【真・第1回〜最新回 全歴史完全網羅 ＆ 毎日差分累積版】
 
 データソース:
 - ロト6 / ロト7 / ミニロト / ナンバーズ3 / ナンバーズ4: 楽天×宝くじ 公開アーカイブ（第1回〜最新回）
@@ -25,35 +25,35 @@ RAKUTEN_CONFIG = {
     "loto6": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/loto6/",
         "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/loto6_past/",
-        "detail_pattern": r"/backnumber/loto6_detail/\d{4}-\d{4}/",
+        "detail_prefix": "loto6_detail",
         "main_count": 6,
         "has_bonus": True,
     },
     "loto7": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/loto7/",
         "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/loto7_past/",
-        "detail_pattern": r"/backnumber/loto7_detail/\d{4}-\d{4}/",
+        "detail_prefix": "loto7_detail",
         "main_count": 7,
         "has_bonus": True,
     },
     "miniloto": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/miniloto/",
         "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/miniloto_past/",
-        "detail_pattern": r"/backnumber/miniloto_detail/\d{4}-\d{4}/",
+        "detail_prefix": "miniloto_detail",
         "main_count": 5,
         "has_bonus": True,
     },
     "numbers3": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers3/",
         "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers3_past/",
-        "detail_pattern": r"/backnumber/numbers3_detail/\d{4}-\d{4}/",
+        "detail_prefix": "numbers3_detail",
         "main_count": 3,
         "has_bonus": False,
     },
     "numbers4": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers4/",
         "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers4_past/",
-        "detail_pattern": r"/backnumber/numbers4_detail/\d{4}-\d{4}/",
+        "detail_prefix": "numbers4_detail",
         "main_count": 4,
         "has_bonus": False,
     },
@@ -109,7 +109,7 @@ def fetch_html(url, retries=2):
                 return raw.decode("utf-8", errors="ignore")
         except Exception:
             if attempt < retries:
-                time.sleep(0.5)
+                time.sleep(0.4)
     return ""
 
 
@@ -137,7 +137,6 @@ def parse_rakuten_html(ltype, html_text):
         return []
 
     cfg = RAKUTEN_CONFIG[ltype]
-    # タグを空白に変換してテキスト構造を解析
     clean = re.sub(r"<script[\s\S]*?</script>", " ", html_text, flags=re.IGNORECASE)
     clean = re.sub(r"<style[\s\S]*?</style>", " ", clean, flags=re.IGNORECASE)
     clean = re.sub(r"<[^>]+>", " ", clean)
@@ -146,7 +145,6 @@ def parse_rakuten_html(ltype, html_text):
     results = []
 
     if ltype in ("numbers3", "numbers4"):
-        # パターン: 開催回 第7114回 抽せん日 2026/11/13 当せん番号 605
         digits_len = cfg["main_count"]
         pattern = re.compile(
             r"第0*(\d+)回\s*抽せん日\s*(\d{4})/(\d{1,2})/(\d{1,2})\s*当せん番号\s*(\d{" + str(digits_len) + r"})"
@@ -163,8 +161,7 @@ def parse_rakuten_html(ltype, html_text):
             })
         return results
 
-    # ロト6・ロト7・ミニロト
-    # ブロック単位で分割: 第XXXX回 抽せん日 YYYY/MM/DD ...
+    # ロト6・ロト7・ミニロト（柔軟なボーナス数字表記に対応）
     blocks = re.split(r"(?=第0*\d+回\s*抽せん日)", clean)
     for blk in blocks:
         m_head = re.match(r"第0*(\d+)回\s*抽せん日\s*(\d{4})/(\d{1,2})/(\d{1,2})", blk)
@@ -173,7 +170,10 @@ def parse_rakuten_html(ltype, html_text):
         r_num = int(m_head.group(1))
         d_str = format_jp_date(m_head.group(2), m_head.group(3), m_head.group(4))
 
-        m_nums = re.search(r"本数字\s*([\d\s\-]+?)\s*ボーナス数字\s*\(?([\d\s\(\)\-]+?)\)?(?:\s*1等|\s*抽せん|\s*$)", blk)
+        m_nums = re.search(
+            r"本数字\s*([\d\s\-]+?)\s*ボーナス数字\s*([\(\)\d\s\-]+?)(?:\s*1等|\s*2等|\s*抽せん|\s*$)",
+            blk,
+        )
         if not m_nums:
             continue
 
@@ -209,35 +209,58 @@ def collect_rakuten_lottery(ltype, existing_rounds):
 
     # 1. 最新月・直近ページを取得
     latest_html = fetch_html(cfg["latest_url"])
-    collected.extend(parse_rakuten_html(ltype, latest_html))
+    latest_items = parse_rakuten_html(ltype, latest_html)
+    collected.extend(latest_items)
 
-    # 2. 過去全回号一覧ページから月別・20回別リンクを取得
+    # 最新回号を把握
+    max_round = max([x["round"] for x in latest_items], default=0)
+    if existing_rounds:
+        max_round = max(max_round, max(existing_rounds))
+
+    # 2. 過去全回号一覧ページから月別リンクを抽出
     past_index_html = fetch_html(cfg["past_index_url"])
-    if not past_index_html:
-        return collected
+    month_links = set()
+    if past_index_html:
+        month_links = set(re.findall(rf"/backnumber/{ltype}/\d{{6}}/", past_index_html))
 
-    # 月別URL (/backnumber/loto6/202610/ 等) と 20回別URL (/backnumber/loto6_detail/0001-0020/ 等) を抽出
-    month_links = set(re.findall(rf"/backnumber/{ltype}/\d{{6}}/", past_index_html))
-    detail_links = set(re.findall(cfg["detail_pattern"], past_index_html))
+    target_urls = set()
 
-    target_urls = []
-    # すでに過去データが十分ある場合は月別と最新detailのみ取得（高速差分更新）
-    if len(existing_rounds) >= 300:
+    # すでに400回以上蓄積済みの場合は直近の差分ページのみ取得（超高速日常モード）
+    if len(existing_rounds) >= 400:
         for path in sorted(month_links, reverse=True)[:3]:
-            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
-        for path in sorted(detail_links, reverse=True)[:3]:
-            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
+            target_urls.add("https://takarakuji.rakuten.co.jp" + path)
+        if max_round > 0:
+            top_block = ((max_round - 1) // 20) * 20 + 1
+            for start in range(max(1, top_block - 40), top_block + 20, 20):
+                end = start + 19
+                target_urls.add(
+                    f"https://takarakuji.rakuten.co.jp/backnumber/{cfg['detail_prefix']}/{start:04d}-{end:04d}/"
+                )
     else:
-        # 初回フルブートストラップ時は第1回〜最新回まですべて取得
+        # 初回フルブートストラップ：第1回〜最新回まですべての20回別ページURLを直接生成
         for path in sorted(month_links):
-            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
-        for path in sorted(detail_links):
-            target_urls.append("https://takarakuji.rakuten.co.jp" + path)
+            target_urls.add("https://takarakuji.rakuten.co.jp" + path)
 
-    print(f"  -> {ltype}: {len(target_urls)}ページのアーカイブを取得中...")
+        fallback_max = {
+            "numbers3": 7200,
+            "numbers4": 7200,
+            "loto6": 2200,
+            "miniloto": 1450,
+            "loto7": 750,
+        }.get(ltype, 2500)
+        upper = max(max_round + 20, fallback_max)
 
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {executor.submit(fetch_html, u): u for u in target_urls}
+        for start in range(1, upper, 20):
+            end = start + 19
+            target_urls.add(
+                f"https://takarakuji.rakuten.co.jp/backnumber/{cfg['detail_prefix']}/{start:04d}-{end:04d}/"
+            )
+
+    url_list = sorted(target_urls)
+    print(f"  -> {ltype}: {len(url_list)}ページのアーカイブを取得中...")
+
+    with ThreadPoolExecutor(max_workers=12) as executor:
+        futures = {executor.submit(fetch_html, u): u for u in url_list}
         for fut in as_completed(futures):
             html = fut.result()
             if html:
@@ -252,12 +275,10 @@ def parse_bingo5_html(html_text):
     clean = re.sub(r"<script[\s\S]*?</script>", " ", html_text, flags=re.IGNORECASE)
     clean = re.sub(r"<style[\s\S]*?</style>", " ", clean, flags=re.IGNORECASE)
     clean = re.sub(r"<[^>]+>", " ", clean)
-    # 全角数字を半角へ正規化
     clean = clean.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
     clean = re.sub(r"\s+", " ", clean)
 
     results = []
-    # パターン: 第1回 ビンゴ5 当選番号速報 抽選日 2017年4月5日 01 10 13 19 FREE 23 28 35 37
     pattern = re.compile(
         r"第0*(\d+)回\s*ビンゴ5\s*当選番号速報\s*抽選日\s*(\d{4})年(\d{1,2})月(\d{1,2})日\s*"
         r"(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+FREE\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})"
@@ -277,26 +298,19 @@ def parse_bingo5_html(html_text):
 
 def collect_bingo5(existing_rounds):
     collected = []
-    # 最新速報ページ
     latest_html = fetch_html("https://takarakuji-loto.jp/bingo5/")
     collected.extend(parse_bingo5_html(latest_html))
 
-    # 過去一覧インデックスから resultXXXX.html を収集
-    index_html = fetch_html("https://takarakuji-loto.jp/bingo5/index.html")
-    if not index_html:
-        index_html = latest_html
-
-    pages = set(re.findall(r"result\d{4}\.html", index_html or ""))
-    # 1〜500回まで確実にカバー
+    pages = set()
     for start in range(1, 550, 10):
         pages.add(f"result{start:04d}.html")
 
     target_urls = [f"https://takarakuji-loto.jp/bingo5/{p}" for p in sorted(pages)]
-    if len(existing_rounds) >= 300:
+    if len(existing_rounds) >= 400:
         target_urls = target_urls[-8:]
 
     print(f"  -> bingo5: {len(target_urls)}ページのアーカイブを取得中...")
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
         futures = {executor.submit(fetch_html, u): u for u in target_urls}
         for fut in as_completed(futures):
             html = fut.result()
@@ -334,7 +348,6 @@ def main():
                 db["carryovers"].pop(ltype, None)
         print(f"[RESULT] {ltype}: 新規追加 {added}件 / 累積総数 {len(merged)}回分")
 
-    # ビンゴ5
     existing_b5 = {x["round"] for x in db["bingo5"]}
     b5_items = collect_bingo5(existing_b5)
     merged_b5, added_b5 = merge_cumulative(db["bingo5"], b5_items)
