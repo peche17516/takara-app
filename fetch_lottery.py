@@ -5,7 +5,7 @@
 【真・第1回〜最新回 全歴史完全網羅 ＆ 毎日差分累積版】
 
 データソース:
-- ロト6 / ロト7 / ミニロト / ナンバーズ3 / ナンバーズ4: 楽天×宝くじ 公開アーカイブ（目次リンク直接抽出）
+- ロト6 / ロト7 / ミニロト / ナンバーズ3 / ナンバーズ4: 楽天×宝くじ 公開アーカイブ（月別＋詳細テーブル両対応）
 - ビンゴ5: 数字選択式宝くじアーカイブ（第1回〜最新回）
 """
 
@@ -24,35 +24,50 @@ WEEKDAYS_JP = ["月", "火", "水", "木", "金", "土", "日"]
 RAKUTEN_CONFIG = {
     "loto6": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/loto6/",
-        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/loto6_past/",
+        "past_index_urls": [
+            "https://takarakuji.rakuten.co.jp/backnumber/loto6_past/",
+            "https://takarakuji.rakuten.co.jp/backnumber/loto6/",
+        ],
         "detail_prefix": "loto6_detail",
         "main_count": 6,
         "has_bonus": True,
     },
     "loto7": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/loto7/",
-        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/loto7_past/",
+        "past_index_urls": [
+            "https://takarakuji.rakuten.co.jp/backnumber/loto7_past/",
+            "https://takarakuji.rakuten.co.jp/backnumber/loto7/",
+        ],
         "detail_prefix": "loto7_detail",
         "main_count": 7,
         "has_bonus": True,
     },
     "miniloto": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/miniloto/",
-        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/miniloto_past/",
+        "past_index_urls": [
+            "https://takarakuji.rakuten.co.jp/backnumber/miniloto_past/",
+            "https://takarakuji.rakuten.co.jp/backnumber/miniloto/",
+        ],
         "detail_prefix": "miniloto_detail",
         "main_count": 5,
         "has_bonus": True,
     },
     "numbers3": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers3/",
-        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers3_past/",
+        "past_index_urls": [
+            "https://takarakuji.rakuten.co.jp/backnumber/numbers3_past/",
+            "https://takarakuji.rakuten.co.jp/backnumber/numbers3/",
+        ],
         "detail_prefix": "numbers3_detail",
         "main_count": 3,
         "has_bonus": False,
     },
     "numbers4": {
         "latest_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers4/",
-        "past_index_url": "https://takarakuji.rakuten.co.jp/backnumber/numbers4_past/",
+        "past_index_urls": [
+            "https://takarakuji.rakuten.co.jp/backnumber/numbers4_past/",
+            "https://takarakuji.rakuten.co.jp/backnumber/numbers4/",
+        ],
         "detail_prefix": "numbers4_detail",
         "main_count": 4,
         "has_bonus": False,
@@ -109,7 +124,7 @@ def fetch_html(url, retries=2):
                 return raw.decode("utf-8", errors="ignore")
         except Exception:
             if attempt < retries:
-                time.sleep(0.4)
+                time.sleep(0.35)
     return ""
 
 
@@ -140,30 +155,47 @@ def parse_rakuten_html(ltype, html_text):
     clean = re.sub(r"<script[\s\S]*?</script>", " ", html_text, flags=re.IGNORECASE)
     clean = re.sub(r"<style[\s\S]*?</style>", " ", clean, flags=re.IGNORECASE)
     clean = re.sub(r"<[^>]+>", " ", clean)
+    clean = clean.translate(str.maketrans("０１２３４５６７８９（）", "0123456789()"))
     clean = re.sub(r"\s+", " ", clean)
 
-    results = []
+    by_round = {}
 
     if ltype in ("numbers3", "numbers4"):
         digits_len = cfg["main_count"]
-        pattern = re.compile(
-            r"第0*(\d+)回\s*抽せん日\s*(\d{4})/(\d{1,2})/(\d{1,2})\s*(?:ナンバーズ[34３４]|当せん番号)\s*(\d{" + str(digits_len) + r"})"
+        # 形式A: 月別ページ (第7114回 抽せん日 2026/11/13 ナンバーズ3 605)
+        pat_monthly = re.compile(
+            r"第0*(\d+)回\s*抽せん日\s*(\d{4})/(\d{1,2})/(\d{1,2})\s*(?:ナンバーズ[34]|当せん番号)\s*(\d{" + str(digits_len) + r"})"
         )
-        for m in pattern.finditer(clean):
+        for m in pat_monthly.finditer(clean):
             r_num = int(m.group(1))
-            d_str = format_jp_date(m.group(2), m.group(3), m.group(4))
-            nums = [int(ch) for ch in m.group(5)]
-            results.append({
+            by_round[r_num] = {
                 "round": r_num,
-                "date": d_str,
-                "numbers": nums,
+                "date": format_jp_date(m.group(2), m.group(3), m.group(4)),
+                "numbers": [int(ch) for ch in m.group(5)],
                 "bonus": [],
-            })
-        return results
+            }
 
-    blocks = re.split(r"(?=第0*\d+回\s*抽せん日)", clean)
+        # 形式B: 過去詳細テーブル (第0001回 1994年10月7日 123)
+        pat_detail = re.compile(
+            r"第0*(\d+)回\s*(?:抽せん日\s*)?(\d{4})[年/](\d{1,2})[月/](\d{1,2})日?\s*(?:ナンバーズ[34]|当せん番号)?\s*(\d{" + str(digits_len) + r"})(?!\d)"
+        )
+        for m in pat_detail.finditer(clean):
+            r_num = int(m.group(1))
+            if r_num not in by_round:
+                by_round[r_num] = {
+                    "round": r_num,
+                    "date": format_jp_date(m.group(2), m.group(3), m.group(4)),
+                    "numbers": [int(ch) for ch in m.group(5)],
+                    "bonus": [],
+                }
+        return list(by_round.values())
+
+    # ロト6 / ロト7 / ミニロト
     bonus_expected = 2 if ltype == "loto7" else 1
+    main_cnt = cfg["main_count"]
 
+    # 形式A: 月別ページブロック
+    blocks = re.split(r"(?=第0*\d+回\s*抽せん日)", clean)
     for blk in blocks:
         m_head = re.match(r"第0*(\d+)回\s*抽せん日\s*(\d{4})/(\d{1,2})/(\d{1,2})", blk)
         if not m_head:
@@ -180,17 +212,15 @@ def parse_rakuten_html(ltype, html_text):
 
         main_list = [int(x) for x in re.findall(r"\d+", m_nums.group(1))]
         bonus_list = [int(x) for x in re.findall(r"\d+", m_nums.group(2))]
-
-        if len(main_list) < cfg["main_count"] or len(bonus_list) < bonus_expected:
+        if len(main_list) < main_cnt or len(bonus_list) < bonus_expected:
             continue
 
         rec = {
             "round": r_num,
             "date": d_str,
-            "numbers": sorted(main_list[: cfg["main_count"]]),
+            "numbers": sorted(main_list[:main_cnt]),
             "bonus": sorted(bonus_list[:bonus_expected]),
         }
-
         if ltype in ("loto6", "loto7"):
             m_co = re.search(r"キャリーオーバー\s*([\d,]+)\s*円", blk)
             if m_co:
@@ -198,10 +228,57 @@ def parse_rakuten_html(ltype, html_text):
                 if co_val > 0:
                     rec["carryover"] = format_compact_yen(co_val)
                     rec["carryoverExact"] = format_exact_yen(co_val)
+        by_round[r_num] = rec
 
-        results.append(rec)
+    # 形式B: 過去詳細テーブル (第0001回 2000年10月5日 02 08 10 13 27 30 (39) [キャリーオーバー])
+    detail_blocks = re.split(r"(?=第0*\d+回\s*\d{4}年\d{1,2}月\d{1,2}日)", clean)
+    for dblk in detail_blocks:
+        m_dhead = re.match(r"第0*(\d+)回\s*(\d{4})年(\d{1,2})月(\d{1,2})日\s*(.*)", dblk)
+        if not m_dhead:
+            continue
+        r_num = int(m_dhead.group(1))
+        if r_num in by_round:
+            continue
 
-    return results
+        d_str = format_jp_date(m_dhead.group(2), m_dhead.group(3), m_dhead.group(4))
+        tail = m_dhead.group(5)
+
+        # 本数字(main_cnt個) + 括弧付きボーナス数字 (01) または (01) (02)
+        if bonus_expected == 1:
+            m_row = re.search(
+                r"((?:\d{1,2}\s+){" + str(main_cnt) + r"})\(\s*(\d{1,2})\s*\)",
+                tail,
+            )
+            if not m_row:
+                continue
+            main_list = [int(x) for x in re.findall(r"\d+", m_row.group(1))]
+            bonus_list = [int(m_row.group(2))]
+        else:
+            m_row = re.search(
+                r"((?:\d{1,2}\s+){" + str(main_cnt) + r"})\(\s*(\d{1,2})\s*\)\s*\(\s*(\d{1,2})\s*\)",
+                tail,
+            )
+            if not m_row:
+                continue
+            main_list = [int(x) for x in re.findall(r"\d+", m_row.group(1))]
+            bonus_list = [int(m_row.group(2)), int(m_row.group(3))]
+
+        rec = {
+            "round": r_num,
+            "date": d_str,
+            "numbers": sorted(main_list[:main_cnt]),
+            "bonus": sorted(bonus_list[:bonus_expected]),
+        }
+        if ltype in ("loto6", "loto7"):
+            m_co = re.search(r"([\d,]{6,})\s*円", tail)
+            if m_co:
+                co_val = int(m_co.group(1).replace(",", ""))
+                if co_val > 0:
+                    rec["carryover"] = format_compact_yen(co_val)
+                    rec["carryoverExact"] = format_exact_yen(co_val)
+        by_round[r_num] = rec
+
+    return list(by_round.values())
 
 
 def collect_rakuten_lottery(ltype, existing_rounds):
@@ -209,16 +286,16 @@ def collect_rakuten_lottery(ltype, existing_rounds):
     collected = []
 
     latest_html = fetch_html(cfg["latest_url"])
-    latest_items = parse_rakuten_html(ltype, latest_html)
-    collected.extend(latest_items)
+    collected.extend(parse_rakuten_html(ltype, latest_html))
 
-    past_index_html = fetch_html(cfg["past_index_url"])
     month_links = set()
     detail_links = set()
 
-    if past_index_html:
-        month_links = set(re.findall(rf"/backnumber/{ltype}/\d{{6}}/?", past_index_html))
-        detail_links = set(re.findall(rf"/backnumber/{cfg['detail_prefix']}/\d+-\d+/?", past_index_html))
+    for idx_url in cfg["past_index_urls"]:
+        html = fetch_html(idx_url)
+        if html:
+            month_links.update(re.findall(rf"/backnumber/{ltype}/\d{{6}}/?", html))
+            detail_links.update(re.findall(rf"/backnumber/{cfg['detail_prefix']}/\d+-\d+/?", html))
 
     target_urls = set()
 
@@ -256,7 +333,7 @@ def collect_rakuten_lottery(ltype, existing_rounds):
                 )
 
     url_list = sorted(target_urls)
-    print(f"  -> {ltype}: {len(url_list)}ページのアーカイブを取得中（目次抽出: 月別{len(month_links)}件 / 詳細{len(detail_links)}件）...")
+    print(f"  -> {ltype}: {len(url_list)}ページのアーカイブを取得中（月別{len(month_links)}件 / 詳細{len(detail_links)}件）...")
 
     with ThreadPoolExecutor(max_workers=12) as executor:
         futures = {executor.submit(fetch_html, u): u for u in url_list}
