@@ -193,7 +193,7 @@ def parse_rakuten_html(ltype, html_text):
                 }
         return list(by_round.values())
 
-    # ロト6 / ロト7 / ミニロト（確実な文字列分割方式で月別・詳細の全ページから100%抽出）
+    # ロト6 / ロト7 / ミニロト（カッコ有無の両方に対応した完全抽出）
     bonus_expected = 2 if ltype == "loto7" else 1
     main_cnt = cfg["main_count"]
 
@@ -216,26 +216,27 @@ def parse_rakuten_html(ltype, html_text):
         if "本数字" in tail and "ボーナス数字" in tail:
             after_main = tail.split("本数字", 1)[1]
             main_part, after_bonus = after_main.split("ボーナス数字", 1)
-            main_list = [int(x) for x in re.findall(r"\d+", main_part)]
-            bonus_list = [int(x) for x in re.findall(r"\(\s*(\d+)\s*\)", after_bonus)]
-            if not bonus_list:
-                bonus_list = [int(x) for x in re.findall(r"\d+", after_bonus[:20])]
+            main_list = [int(x) for x in re.findall(r"\d{1,2}", main_part)]
+            # ボーナス数字はカッコあり (39) とカッコなし 39 の両方から先頭 bonus_expected 個を抽出
+            bonus_head = after_bonus.split("1等", 1)[0]
+            bonus_list = [int(x) for x in re.findall(r"\d{1,2}", bonus_head)]
         else:
+            # テーブル横並び形式（カッコあり・カッコなし両対応）
             if bonus_expected == 1:
                 m_row = re.search(
-                    r"((?:\d{1,2}[\s\-]+){" + str(main_cnt) + r"})\(\s*(\d{1,2})\s*\)",
+                    r"((?:\d{1,2}[\s\-]+){" + str(main_cnt) + r"})\(?\s*(\d{1,2})\s*\)?",
                     tail,
                 )
                 if m_row:
-                    main_list = [int(x) for x in re.findall(r"\d+", m_row.group(1))]
+                    main_list = [int(x) for x in re.findall(r"\d{1,2}", m_row.group(1))]
                     bonus_list = [int(m_row.group(2))]
             else:
                 m_row = re.search(
-                    r"((?:\d{1,2}[\s\-]+){" + str(main_cnt) + r"})\(\s*(\d{1,2})\s*\)\s*\(\s*(\d{1,2})\s*\)",
+                    r"((?:\d{1,2}[\s\-]+){" + str(main_cnt) + r"})\(?\s*(\d{1,2})\s*\)?\s*\(?\s*(\d{1,2})\s*\)?",
                     tail,
                 )
                 if m_row:
-                    main_list = [int(x) for x in re.findall(r"\d+", m_row.group(1))]
+                    main_list = [int(x) for x in re.findall(r"\d{1,2}", m_row.group(1))]
                     bonus_list = [int(m_row.group(2)), int(m_row.group(3))]
 
         if len(main_list) < main_cnt or len(bonus_list) < bonus_expected:
