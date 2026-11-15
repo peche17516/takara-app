@@ -184,15 +184,31 @@
       background: linear-gradient(180deg, #FBF0D3, #E9CE91);
       border: 1.5px solid #C59838;
       border-radius: var(--radius-md);
-      padding: 9px 4px;
+      padding: 7px 4px;
       color: #2B1A0E;
       font-family: 'Shippori Mincho', serif;
       font-size: 13.5px;
       font-weight: 800;
       cursor: pointer;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      line-height: 1.2;
       box-shadow: 0 3px 7px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.75);
       transition: all 0.15s ease;
+    }
+
+    .lottery-tab .tab-draw-day {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #6B4D2B;
+      background: rgba(138, 100, 20, 0.14);
+      padding: 1px 6px;
+      border-radius: 99px;
+      letter-spacing: 0.02em;
     }
 
     .lottery-tab.active {
@@ -202,6 +218,12 @@
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
       box-shadow: 0 4px 12px rgba(184, 41, 41, 0.5), inset 0 1px 0 rgba(255, 235, 175, 0.55);
       transform: translateY(-1px);
+    }
+
+    .lottery-tab.active .tab-draw-day {
+      color: #FFE9A8;
+      background: rgba(0, 0, 0, 0.32);
+      text-shadow: none;
     }
 
     /* ================= MAIN PARCHMENT BOARD ================= */
@@ -1413,14 +1435,32 @@
       </div>
     </header>
 
-    <!-- 6 LOTTERY TYPE TABS -->
+    <!-- 6 LOTTERY TYPE TABS WITH DRAW DAYS -->
     <nav class="lottery-grid" id="lotteryTabs">
-      <button type="button" class="lottery-tab active" data-type="numbers3">ナンバーズ3</button>
-      <button type="button" class="lottery-tab" data-type="numbers4">ナンバーズ4</button>
-      <button type="button" class="lottery-tab" data-type="miniloto">ミニロト</button>
-      <button type="button" class="lottery-tab" data-type="loto6">ロト6</button>
-      <button type="button" class="lottery-tab" data-type="loto7">ロト7</button>
-      <button type="button" class="lottery-tab" data-type="bingo5">ビンゴ5</button>
+      <button type="button" class="lottery-tab active" data-type="numbers3">
+        <span>ナンバーズ3</span>
+        <span class="tab-draw-day">月〜金 抽選</span>
+      </button>
+      <button type="button" class="lottery-tab" data-type="numbers4">
+        <span>ナンバーズ4</span>
+        <span class="tab-draw-day">月〜金 抽選</span>
+      </button>
+      <button type="button" class="lottery-tab" data-type="miniloto">
+        <span>ミニロト</span>
+        <span class="tab-draw-day">毎週火曜 抽選</span>
+      </button>
+      <button type="button" class="lottery-tab" data-type="loto6">
+        <span>ロト6</span>
+        <span class="tab-draw-day">月・木 抽選</span>
+      </button>
+      <button type="button" class="lottery-tab" data-type="loto7">
+        <span>ロト7</span>
+        <span class="tab-draw-day">毎週金曜 抽選</span>
+      </button>
+      <button type="button" class="lottery-tab" data-type="bingo5">
+        <span>ビンゴ5</span>
+        <span class="tab-draw-day">毎週水曜 抽選</span>
+      </button>
     </nav>
 
     <!-- MAIN BOARD -->
@@ -1444,7 +1484,7 @@
         <span id="carryoverAmountText">0円</span>
       </div>
 
-      <!-- Past Official Result Banner -->
+      <!-- Past Official Draw Banner -->
       <div class="past-official-banner" id="pastOfficialBanner">
         <div class="past-banner-header">
           <span class="past-banner-title" id="pastBannerTitle">🏛 第0000回 公式確定当選番号</span>
