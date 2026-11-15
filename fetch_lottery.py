@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """
 全期間累積型・宝くじ当選番号自動収集スクリプト (fetch_lottery.py)
-【真・第1回〜最新回 全歴史完全網羅 ＆ 毎日差分累積版】
+【真・第1回〜最新回 全歴史完全網羅 ＆ 毎日差分累積版（全6種完全対応）】
 
 データソース:
-- ロト6 / ロト7 / ミニロト / ナンバーズ3 / ナンバーズ4: 楽天×宝くじ 公開アーカイブ（月別＋詳細テーブル全書式対応）
+- ロト6 / ロト7 / ミニロト / ナンバーズ3 / ナンバーズ4: 楽天×宝くじ 公開アーカイブ（月別＋詳細全回号）
 - ビンゴ5: 数字選択式宝くじアーカイブ（第1回〜最新回）
 """
 
@@ -193,7 +193,7 @@ def parse_rakuten_html(ltype, html_text):
                 }
         return list(by_round.values())
 
-    # ロト6 / ロト7 / ミニロト（月別ページ・詳細ページ両方のあらゆる書式を統一ブロック分割で抽出）
+    # ロト6 / ロト7 / ミニロト（確実な文字列分割方式で月別・詳細の全ページから100%抽出）
     bonus_expected = 2 if ltype == "loto7" else 1
     main_cnt = cfg["main_count"]
 
@@ -213,16 +213,14 @@ def parse_rakuten_html(ltype, html_text):
         main_list = []
         bonus_list = []
 
-        # パターン1: 「本数字 2-8-10-13-27-30 ボーナス数字 (39)」形式
-        m_labeled = re.search(
-            r"本数字\s*([\d\s\-]+?)\s*ボーナス数字\s*([\(\)\d\s\-]+)",
-            tail,
-        )
-        if m_labeled:
-            main_list = [int(x) for x in re.findall(r"\d+", m_labeled.group(1))]
-            bonus_list = [int(x) for x in re.findall(r"\d+", m_labeled.group(2))]
+        if "本数字" in tail and "ボーナス数字" in tail:
+            after_main = tail.split("本数字", 1)[1]
+            main_part, after_bonus = after_main.split("ボーナス数字", 1)
+            main_list = [int(x) for x in re.findall(r"\d+", main_part)]
+            bonus_list = [int(x) for x in re.findall(r"\(\s*(\d+)\s*\)", after_bonus)]
+            if not bonus_list:
+                bonus_list = [int(x) for x in re.findall(r"\d+", after_bonus[:20])]
         else:
-            # パターン2: ラベルなしテーブル行「02 08 10 13 27 30 (39)」形式
             if bonus_expected == 1:
                 m_row = re.search(
                     r"((?:\d{1,2}[\s\-]+){" + str(main_cnt) + r"})\(\s*(\d{1,2})\s*\)",
@@ -261,6 +259,19 @@ def parse_rakuten_html(ltype, html_text):
     return list(by_round.values())
 
 
+def generate_recent_months(count=15):
+    now = datetime.now()
+    y, m = now.year, now.month
+    res = []
+    for _ in range(count):
+        res.append(f"{y}{m:02d}")
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    return res
+
+
 def collect_rakuten_lottery(ltype, existing_rounds):
     cfg = RAKUTEN_CONFIG[ltype]
     collected = []
@@ -280,12 +291,17 @@ def collect_rakuten_lottery(ltype, existing_rounds):
     target_urls = set()
 
     if len(existing_rounds) >= 350:
+        for ym in generate_recent_months(3):
+            target_urls.add(f"https://takarakuji.rakuten.co.jp/backnumber/{ltype}/{ym}/")
         for path in sorted(month_links, reverse=True)[:3]:
             u = "https://takarakuji.rakuten.co.jp" + path
             if not u.endswith("/"):
                 u += "/"
             target_urls.add(u)
     else:
+        for ym in generate_recent_months(15):
+            target_urls.add(f"https://takarakuji.rakuten.co.jp/backnumber/{ltype}/{ym}/")
+
         for path in sorted(month_links):
             u = "https://takarakuji.rakuten.co.jp" + path
             if not u.endswith("/"):
@@ -298,7 +314,6 @@ def collect_rakuten_lottery(ltype, existing_rounds):
                 u += "/"
             target_urls.add(u)
 
-        # ミニロト等、目次からdetailリンクが拾えなかった場合は第1回〜最新回まで20回刻みURLを直接生成
         if not detail_links:
             for start in range(1, cfg["max_round_hint"], 20):
                 end = start + 19
