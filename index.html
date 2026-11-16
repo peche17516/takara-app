@@ -1340,17 +1340,25 @@
 
     .cal-row {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(255,255,255,0.7);
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(255,255,255,0.75);
       border: 1px solid #C8B48E;
       border-radius: 8px;
-      padding: 9px 12px;
+      padding: 9px 11px;
     }
 
     .cal-row.super-lucky {
       background: linear-gradient(90deg, #FFF7DF, #F8E5B0);
       border: 1.5px solid var(--brass-mid);
+    }
+
+    .cal-top-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
     .cal-date-str {
@@ -1361,14 +1369,15 @@
 
     .cal-badges {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .rokuyo-pill {
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 800;
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 4px;
       background: #E6D7BA;
       color: #3A2718;
@@ -1380,12 +1389,53 @@
     }
 
     .auspicious-tag {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
-      color: #8A5A00;
-      background: rgba(229, 185, 76, 0.35);
-      padding: 2px 7px;
+      color: #7A4B00;
+      background: rgba(229, 185, 76, 0.42);
+      border: 1px solid rgba(197, 150, 43, 0.5);
+      padding: 1px 6px;
       border-radius: 4px;
+    }
+
+    .moon-tag {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #1D3557;
+      background: rgba(29, 78, 137, 0.14);
+      border: 1px solid rgba(29, 78, 137, 0.35);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .cal-draws-line {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding-top: 5px;
+      border-top: 1px dashed rgba(138, 100, 20, 0.25);
+      font-size: 10.5px;
+    }
+
+    .cal-draw-label {
+      font-weight: 700;
+      color: var(--ink-muted);
+      margin-right: 2px;
+    }
+
+    .draw-chip {
+      background: #3A2718;
+      color: #F6DFAC;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    .draw-chip.loto {
+      background: #7D1717;
+      color: #FFF5D6;
     }
 
     /* Toast Notification */
@@ -1497,12 +1547,12 @@
       <!-- Stacked Single-Row Utility Buttons -->
       <div class="utility-stack">
         <button type="button" class="utility-btn" id="openCalendarBtn">
-          <span>📅 14日間開運暦（六曜・一粒万倍日・大安）</span>
+          <span>📅 14日間開運暦（六曜・吉日・抽選日一覧）</span>
           <span class="sub-pill">別画面で開く ↗</span>
         </button>
 
         <button type="button" class="utility-btn" id="toggleConditionBtn">
-          <span>⚙ 軸数字・除外数字を選ぶ（詳細設定）</span>
+          <span>⚙ 軸数字・除外数字を選ぶ（条件設定）</span>
           <span class="sub-pill" id="conditionSummaryPill">設定なし ▼</span>
         </button>
       </div>
@@ -1523,7 +1573,7 @@
 
       <!-- Predict & Official Reset Buttons -->
       <div class="action-btn-row">
-        <button type="button" class="primary-predict-btn" id="runPredictBtn">🎲 予測選定を実行</button>
+        <button type="button" class="primary-predict-btn" id="runPredictBtn">🎲 条件／自動再選択</button>
         <button type="button" class="official-reset-btn" id="resetOfficialBtn">🏛 公式本命に戻す</button>
       </div>
     </main>
@@ -1558,7 +1608,7 @@
   <div class="modal-backdrop" id="calendarModal">
     <div class="modal-panel">
       <div class="modal-header">
-        <h2 class="modal-title">📅 14日間開運暦（六曜・吉日）</h2>
+        <h2 class="modal-title">📅 14日間開運暦（吉日・新月満月・抽選日）</h2>
         <button type="button" class="modal-close-btn" data-close="calendarModal">✕ 閉じる</button>
       </div>
       <div class="modal-body" id="calendarModalBody"></div>
@@ -3031,34 +3081,182 @@
       });
     }
 
-    /* ================= 14-DAY LUCKY CALENDAR MODAL ================= */
-    function openCalendarModal() {
+    /* ================= 14-DAY LUCKY CALENDAR MODAL (ASTRONOMICAL & TRADITIONAL ALMANAC) ================= */
+    function getJulianDayNumber(y, m, d) {
+      const a = Math.floor((14 - m) / 12);
+      const y2 = y + 4800 - a;
+      const m2 = m + 12 * a - 3;
+      return d + Math.floor((153 * m2 + 2) / 5) + 365 * y2 +
+        Math.floor(y2 / 4) - Math.floor(y2 / 100) + Math.floor(y2 / 400) - 32045;
+    }
+
+    function getMoonAge(dateObj) {
+      // 基準新月: 2000-01-06 18:14 UTC (JST 2000-01-07 03:14)
+      const baseNewMoonMs = Date.UTC(2000, 0, 6, 18, 14, 0);
+      const targetNoonJstMs = Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 3, 0, 0);
+      const synodicMonth = 29.530588853;
+      const diffDays = (targetNoonJstMs - baseNewMoonMs) / 86400000;
+      return ((diffDays % synodicMonth) + synodicMonth) % synodicMonth;
+    }
+
+    function getSolarTermMonthIndex(dateObj) {
+      // 節切り月 (0=寅月/立春〜, 1=卯月/啓蟄〜, ..., 11=丑月/小寒〜)
+      const y = dateObj.getFullYear();
+      const md = (dateObj.getMonth() + 1) * 100 + dateObj.getDate();
+      // 2024-2028年の主要二十四節気（節入り日）
+      const sets = [
+        { md: 105, idx: 11 }, // 小寒 (丑月)
+        { md: 204, idx: 0 },  // 立春 (寅月)
+        { md: 305, idx: 1 },  // 啓蟄 (卯月)
+        { md: 404, idx: 2 },  // 清明 (辰月)
+        { md: 505, idx: 3 },  // 立夏 (巳月)
+        { md: 605, idx: 4 },  // 芒種 (午月)
+        { md: 707, idx: 5 },  // 小暑 (未月)
+        { md: 807, idx: 6 },  // 立秋 (申月)
+        { md: 907, idx: 7 },  // 白露 (酉月)
+        { md: 1008, idx: 8 }, // 寒露 (戌月)
+        { md: 1107, idx: 9 }, // 立冬 (亥月)
+        { md: 1207, idx: 10 } // 大雪 (子月)
+      ];
+      let currentIdx = 10; // 前年大雪以降（子月）
+      for (const s of sets) {
+        if (md >= s.md) currentIdx = s.idx;
+      }
+      return currentIdx;
+    }
+
+    function computeJapaneseAlmanac(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = dateObj.getMonth() + 1;
+      const d = dateObj.getDate();
+      const jdn = getJulianDayNumber(y, m, d);
+
+      // 1. 干支（十干: 0=甲..9=癸, 十二支: 0=子..11=亥）
+      // JDN 2451545 (2000-01-01) は 戊午 (十干=4, 十二支=6)
+      const stemIdx = ((jdn - 2451545 + 4) % 10 + 10) % 10;
+      const branchIdx = ((jdn - 2451545 + 6) % 12 + 12) % 12;
+
+      // 2. 節切り月 (0=寅..11=丑)
+      const setsuMonth = getSolarTermMonthIndex(dateObj);
+
+      // 3. 一粒万倍日（節切り月ごとの吉十二支）
+      const ichiryuTable = [
+        [1, 6],   // 寅月: 丑・午
+        [2, 9],   // 卯月: 寅・酉
+        [0, 3],   // 辰月: 子・卯
+        [3, 4],   // 巳月: 卯・辰
+        [4, 5],   // 午月: 辰・巳
+        [5, 6],   // 未月: 巳・午
+        [6, 7],   // 申月: 午・未
+        [7, 8],   // 酉月: 未・申
+        [8, 9],   // 戌月: 申・酉
+        [9, 10],  // 亥月: 酉・戌
+        [10, 11], // 子月: 戌・亥
+        [0, 11]   // 丑月: 子・亥
+      ];
+      const isIchiryu = ichiryuTable[setsuMonth].includes(branchIdx);
+
+      // 4. 天赦日（季節ごとの特定干支: 春=戊寅, 夏=甲午, 秋=戊申, 冬=甲子）
+      // 季節判定: 寅・卯・辰(0,1,2)=春, 巳・午・未(3,4,5)=夏, 申・酉・戌(6,7,8)=秋, 亥・子・丑(9,10,11)=冬
+      let isTensha = false;
+      if (setsuMonth <= 2 && stemIdx === 4 && branchIdx === 2) isTensha = true;       // 戊寅
+      else if (setsuMonth >= 3 && setsuMonth <= 5 && stemIdx === 0 && branchIdx === 6) isTensha = true; // 甲午
+      else if (setsuMonth >= 6 && setsuMonth <= 8 && stemIdx === 4 && branchIdx === 8) isTensha = true; // 戊申
+      else if (setsuMonth >= 9 && stemIdx === 0 && branchIdx === 0) isTensha = true; // 甲子
+
+      // 5. 寅の日 (branchIdx === 2) / 巳の日 (branchIdx === 5) / 己巳の日 (stemIdx === 5 && branchIdx === 5)
+      const isTora = branchIdx === 2;
+      const isTsuchinotoMi = (stemIdx === 5 && branchIdx === 5);
+      const isMi = (branchIdx === 5 && !isTsuchinotoMi);
+
+      // 6. 新月・満月（朔望月計算）
+      const moonAge = getMoonAge(dateObj);
+      let moonEvent = '';
+      if (moonAge < 1.0 || moonAge > 28.53) {
+        moonEvent = '🌑 新月';
+      } else if (Math.abs(moonAge - 14.765) < 0.75) {
+        moonEvent = '🌕 満月';
+      }
+
+      // 7. 旧暦近似による六曜（朔日基準 + 旧暦月）
       const rokuyoNames = ['大安', '赤口', '先勝', '友引', '先負', '仏滅'];
+      const baseNewMoonMs = Date.UTC(2000, 0, 6, 18, 14, 0);
+      const targetNoonJstMs = Date.UTC(y, m - 1, d, 3, 0, 0);
+      const synodicMonth = 29.530588853;
+      const lunations = (targetNoonJstMs - baseNewMoonMs) / 86400000 / synodicMonth;
+      const lunarMonthApprox = (Math.floor(lunations) % 12 + 12) % 12;
+      const lunarDayApprox = Math.floor(moonAge) + 1;
+      const rokuyo = rokuyoNames[(lunarMonthApprox + lunarDayApprox) % 6];
+
+      // 8. その日の宝くじ抽選スケジュール
+      const dow = dateObj.getDay(); // 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+      const draws = [];
+      if (dow >= 1 && dow <= 5) {
+        draws.push({ name: 'ナンバーズ3・4', isLoto: false });
+      }
+      if (dow === 1 || dow === 4) {
+        draws.push({ name: 'ロト6', isLoto: true });
+      }
+      if (dow === 2) {
+        draws.push({ name: 'ミニロト', isLoto: true });
+      }
+      if (dow === 3) {
+        draws.push({ name: 'ビンゴ5', isLoto: true });
+      }
+      if (dow === 5) {
+        draws.push({ name: 'ロト7', isLoto: true });
+      }
+
+      const luckyTags = [];
+      if (isTensha) luckyTags.push('天赦日');
+      if (isIchiryu) luckyTags.push('一粒万倍日');
+      if (isTsuchinotoMi) luckyTags.push('己巳の日');
+      if (isTora) luckyTags.push('寅の日');
+      if (isMi) luckyTags.push('巳の日');
+
+      return {
+        rokuyo,
+        luckyTags,
+        moonEvent,
+        draws
+      };
+    }
+
+    function openCalendarModal() {
       const body = document.getElementById('calendarModalBody');
       const today = new Date();
-      let html = '<div class="calendar-list">';
+      let html = `
+        <div style="font-size:11px; color:var(--ink-muted); background:rgba(255,255,255,0.65); padding:6px 9px; border-radius:6px; border-left:3px solid var(--brass-mid); margin-bottom:9px; line-height:1.45;">
+          六曜（大安）・一粒万倍日・天赦日・寅の日・巳の日・新月／満月と、各曜日の宝くじ抽選日を一覧表示しています。
+        </div>
+        <div class="calendar-list">
+      `;
 
       for (let i = 0; i < 14; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
         const dateLabel = formatDateWithWeekday(d);
-        const dayIndex = Math.floor(d.getTime() / 86400000);
-        const rokuyo = rokuyoNames[(dayIndex + d.getMonth()) % 6];
+        const info = computeJapaneseAlmanac(d);
 
-        const tags = [];
-        if ((dayIndex % 6 === 0) || (dayIndex % 11 === 2)) tags.push('一粒万倍日');
-        if (dayIndex % 13 === 4) tags.push('寅の日');
-        if (dayIndex % 12 === 7) tags.push('巳の日');
-        if (dayIndex % 60 === 18) tags.push('天赦日');
+        const isSuper = info.rokuyo === '大安' || info.luckyTags.length > 0 || info.moonEvent !== '';
 
-        const isSuper = rokuyo === '大安' || tags.length > 0;
+        const drawsHtml = info.draws.length > 0
+          ? info.draws.map(dr => `<span class="draw-chip ${dr.isLoto ? 'loto' : ''}">${dr.name}</span>`).join('')
+          : `<span style="color:var(--ink-muted); font-size:10.5px;">抽選休み（土日）</span>`;
 
         html += `
           <div class="cal-row ${isSuper ? 'super-lucky' : ''}">
-            <span class="cal-date-str">${dateLabel}</span>
-            <div class="cal-badges">
-              ${tags.map(t => `<span class="auspicious-tag">✨ ${t}</span>`).join('')}
-              <span class="rokuyo-pill ${rokuyo === '大安' ? 'taian' : ''}">${rokuyo}</span>
+            <div class="cal-top-line">
+              <span class="cal-date-str">${dateLabel}</span>
+              <div class="cal-badges">
+                ${info.luckyTags.map(t => `<span class="auspicious-tag">✨ ${t}</span>`).join('')}
+                ${info.moonEvent ? `<span class="moon-tag">${info.moonEvent}</span>` : ''}
+                <span class="rokuyo-pill ${info.rokuyo === '大安' ? 'taian' : ''}">${info.rokuyo}</span>
+              </div>
+            </div>
+            <div class="cal-draws-line">
+              <span class="cal-draw-label">🎯 抽選日：</span>
+              ${drawsHtml}
             </div>
           </div>
         `;
