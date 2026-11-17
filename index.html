@@ -99,7 +99,7 @@
     .brand-title {
       margin: 0;
       font-family: 'Shippori Mincho', serif;
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 800;
       color: #F7E7C4;
       letter-spacing: 0.03em;
@@ -112,7 +112,7 @@
       align-items: center;
       gap: 5px;
       margin-top: 3px;
-      font-size: 10.5px;
+      font-size: 10px;
       color: #D5C29E;
       font-weight: 500;
     }
@@ -134,9 +134,9 @@
     .header-actions {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       flex-shrink: 0;
-      width: 112px;
+      width: 118px;
     }
 
     .brass-mini-btn {
@@ -145,8 +145,8 @@
       color: #F6DFAC;
       border: 1px solid var(--brass-mid);
       border-radius: var(--radius-sm);
-      padding: 6px 8px;
-      font-size: 11px;
+      padding: 5px 8px;
+      font-size: 10.5px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -162,12 +162,18 @@
       transform: scale(0.96);
     }
 
+    .brass-mini-btn.sound-off {
+      opacity: 0.65;
+      border-color: #6B5335;
+      color: #B8A482;
+    }
+
     .brass-mini-btn .badge-count {
       background: var(--crimson-bright);
       color: #FFF;
       border-radius: 99px;
       padding: 0 5px;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 800;
       margin-left: 2px;
     }
@@ -333,12 +339,45 @@
       box-shadow: none;
     }
 
+    /* Numbers3 Mini Mode Toggle Bar */
+    .n3-mode-bar {
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: rgba(239, 228, 206, 0.14);
+      border: 1px solid rgba(229, 185, 76, 0.45);
+      border-radius: var(--radius-md);
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+
+    .n3-mode-btn {
+      background: rgba(255, 253, 247, 0.12);
+      color: #E8D7B7;
+      border: 1px solid rgba(197, 150, 43, 0.4);
+      border-radius: 6px;
+      padding: 7px 6px;
+      font-size: 11.5px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .n3-mode-btn.active {
+      background: linear-gradient(180deg, #F6D87B, #C89624);
+      color: #231406;
+      border-color: #FFF2C2;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+
     /* Carryover Shimmer Banner */
     .carryover-banner {
       display: none;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 2px;
       background: linear-gradient(110deg, #6E1313 0%, #A32222 45%, #D99B26 50%, #A32222 55%, #6E1313 100%);
       background-size: 220% 100%;
       animation: goldShimmer 4.5s infinite linear;
@@ -351,6 +390,16 @@
       font-weight: 800;
       text-shadow: 0 1px 3px rgba(0,0,0,0.65);
       box-shadow: 0 3px 10px rgba(139, 30, 30, 0.35);
+      text-align: center;
+    }
+
+    .co-strategy-sub {
+      font-size: 10px;
+      color: #FFE9A8;
+      font-weight: 700;
+      background: rgba(0,0,0,0.3);
+      padding: 1px 8px;
+      border-radius: 99px;
     }
 
     @keyframes goldShimmer {
@@ -464,8 +513,43 @@
       border-left: 3px solid var(--crimson);
       padding: 6px 8px;
       border-radius: 4px;
-      margin-bottom: 9px;
+      margin-bottom: 8px;
       line-height: 1.45;
+    }
+
+    .drought-insight-bar {
+      background: rgba(58, 39, 25, 0.08);
+      border: 1px dashed #9B7F52;
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--ink-dark);
+    }
+
+    .preset-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 9px;
+    }
+
+    .preset-btn {
+      background: linear-gradient(180deg, #FFFDF7, #E8D8B9);
+      border: 1.5px solid #9B7F52;
+      border-radius: 6px;
+      padding: 6px 5px;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #2C1B0E;
+      cursor: pointer;
+      text-align: center;
+      line-height: 1.35;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .preset-btn:active {
+      transform: scale(0.97);
     }
 
     .full-axis-notice {
@@ -643,11 +727,11 @@
       border-radius: var(--radius-md);
       padding: 12px 10px;
       font-family: 'Shippori Mincho', serif;
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 800;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(139, 30, 30, 0.45), inset 0 1px 0 rgba(255, 232, 165, 0.4);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
     }
 
     .primary-predict-btn:active {
@@ -755,6 +839,14 @@
       font-size: 15.5px;
       color: #241406;
       position: relative;
+    }
+
+    .gold-coin.is-wildcard {
+      background: radial-gradient(circle at 32% 28%, #E5DFD3, #9E917D 65%, #5C5142 100%);
+      border: 2px dashed #4A3F32;
+      color: #FFFDF7;
+      font-size: 14px;
+      opacity: 0.85;
     }
 
     .gold-coin.is-axis {
@@ -984,6 +1076,34 @@
       transform: scale(0.96);
     }
 
+    /* Bulk Save 3 Tickets Button */
+    .bulk-save-wrap {
+      margin-top: 2px;
+    }
+
+    .bulk-save-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #2D7A47, #1A4E2B);
+      color: #FFFDF7;
+      border: 2px solid var(--brass-bright);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-family: 'Shippori Mincho', serif;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .bulk-save-btn:active {
+      transform: scale(0.98);
+    }
+
     /* ================= MODALS ================= */
     .modal-backdrop {
       display: none;
@@ -1120,7 +1240,103 @@
       flex-shrink: 0;
     }
 
-    /* Ticket Ledger Backup Box */
+    /* Ticket Ledger Dashboard, Manual Entry & Backup Box */
+    .ledger-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .ledger-stat-card {
+      background: #2A1B11;
+      border: 1px solid var(--brass-mid);
+      border-radius: 8px;
+      padding: 7px 4px;
+      text-align: center;
+      color: #F7E7C4;
+    }
+
+    .ledger-stat-val {
+      font-family: 'Cinzel', 'Noto Sans JP', serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--brass-bright);
+      line-height: 1.2;
+    }
+
+    .ledger-stat-lbl {
+      font-size: 10px;
+      color: #D5C29E;
+      margin-top: 2px;
+    }
+
+    .ledger-filter-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .ledger-filter-select {
+      flex: 1;
+      background: #FFFDF7;
+      border: 1.5px solid #B89D6D;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--ink-dark);
+    }
+
+    .manual-entry-panel {
+      background: rgba(255, 253, 247, 0.85);
+      border: 1.5px solid var(--brass-mid);
+      border-radius: 9px;
+      padding: 9px 10px;
+      margin-bottom: 10px;
+    }
+
+    .manual-toggle-btn {
+      width: 100%;
+      background: linear-gradient(180deg, #276B3D, #184727);
+      color: #FFF;
+      border: 1px solid #76C893;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .manual-form-body {
+      display: none;
+      margin-top: 9px;
+      padding-top: 9px;
+      border-top: 1px dashed #C2AE88;
+    }
+
+    .manual-form-body.open {
+      display: block;
+    }
+
+    .manual-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 7px;
+    }
+
+    .manual-input {
+      width: 100%;
+      background: #FFF;
+      border: 1px solid #A8926C;
+      border-radius: 5px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-dark);
+    }
+
     .backup-panel {
       background: rgba(232, 218, 192, 0.75);
       border: 1.5px solid #B89D6D;
@@ -1271,6 +1487,14 @@
       position: relative;
     }
 
+    .ledger-coin.is-wildcard {
+      background: radial-gradient(circle at 32% 28%, #E5DFD3, #9E917D 65%, #5C5142 100%);
+      border: 1.5px dashed #4A3F32;
+      color: #FFFDF7;
+      font-size: 12px;
+      opacity: 0.85;
+    }
+
     .ledger-coin.hit-main {
       background: radial-gradient(circle at 32% 28%, #FFD6D6, #C92A2A 65%, #6E0E0E 100%);
       border: 2px solid #FFE28A;
@@ -1331,7 +1555,7 @@
       cursor: pointer;
     }
 
-    /* 14-Day Single Column Calendar List */
+    /* 14-Day Single Column Calendar List (Compact 2-Row Layout) */
     .calendar-list {
       display: flex;
       flex-direction: column;
@@ -1341,46 +1565,52 @@
     .cal-row {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       background: rgba(255,255,255,0.75);
       border: 1px solid #C8B48E;
-      border-radius: 8px;
-      padding: 9px 11px;
+      border-radius: 9px;
+      padding: 8px 10px;
     }
 
     .cal-row.super-lucky {
-      background: linear-gradient(90deg, #FFF7DF, #F8E5B0);
+      background: linear-gradient(135deg, #FFF8E3, #F7E1A6);
       border: 1.5px solid var(--brass-mid);
+      box-shadow: 0 2px 6px rgba(197, 150, 43, 0.22);
     }
 
     .cal-top-line {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
       gap: 6px;
     }
 
     .cal-date-str {
       font-weight: 800;
-      font-size: 13.5px;
+      font-size: 13px;
       color: var(--ink-dark);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .cal-badges {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
-      gap: 4px;
+      justify-content: flex-end;
+      flex-wrap: nowrap;
+      gap: 3.5px;
+      min-width: 0;
     }
 
     .rokuyo-pill {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
-      padding: 2px 7px;
+      padding: 1.5px 6px;
       border-radius: 4px;
       background: #E6D7BA;
       color: #3A2718;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .rokuyo-pill.taian {
@@ -1389,53 +1619,86 @@
     }
 
     .auspicious-tag {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 800;
-      color: #7A4B00;
+      color: #7D4E00;
       background: rgba(229, 185, 76, 0.42);
       border: 1px solid rgba(197, 150, 43, 0.5);
-      padding: 1px 6px;
+      padding: 1px 5px;
       border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .moon-tag {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 800;
       color: #1D3557;
-      background: rgba(29, 78, 137, 0.14);
-      border: 1px solid rgba(29, 78, 137, 0.35);
-      padding: 1px 6px;
+      background: #DCE8F8;
+      border: 1px solid #A8C5E8;
+      padding: 1px 5px;
       border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .cal-draws-line {
+    .cal-bottom-line {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 4px;
-      padding-top: 5px;
-      border-top: 1px dashed rgba(138, 100, 20, 0.25);
+      justify-content: space-between;
+      gap: 6px;
+      padding-top: 4px;
+      border-top: 1px dashed rgba(138, 100, 20, 0.28);
       font-size: 10.5px;
     }
 
-    .cal-draw-label {
-      font-weight: 700;
+    .cal-draws-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    .cal-draws-label {
+      font-weight: 800;
       color: var(--ink-muted);
-      margin-right: 2px;
-    }
-
-    .draw-chip {
-      background: #3A2718;
-      color: #F6DFAC;
-      font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 4px;
       font-size: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .draw-chip.loto {
-      background: #7D1717;
-      color: #FFF5D6;
+    .draw-lotto-chip {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 99px;
+      background: #2E1E13;
+      color: #F7E5BE;
+      border: 1px solid var(--brass-mid);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .draw-lotto-chip.major {
+      background: #7A1818;
+      color: #FFE9A8;
+      border-color: var(--brass-bright);
+    }
+
+    .draw-none-text {
+      font-size: 10px;
+      color: #8C7A68;
+      white-space: nowrap;
+    }
+
+    .cal-lunar-inline {
+      font-size: 10px;
+      color: var(--ink-muted);
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* Toast Notification */
@@ -1449,7 +1712,7 @@
       border: 1.5px solid var(--brass-bright);
       padding: 9px 16px;
       border-radius: 99px;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 700;
       box-shadow: 0 8px 20px rgba(0,0,0,0.6);
       opacity: 0;
@@ -1457,6 +1720,9 @@
       transition: all 0.25s ease;
       z-index: 2000;
       white-space: nowrap;
+      max-width: 94vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .toast-banner.show {
@@ -1480,6 +1746,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <button type="button" class="brass-mini-btn" id="toggleSoundBtn">🔊 効果音 ON</button>
         <button type="button" class="brass-mini-btn" id="openHistoryBtn">📜 過去100回台帳</button>
         <button type="button" class="brass-mini-btn" id="openLedgerBtn">📒 購入台帳 <span class="badge-count" id="ledgerCountBadge">0</span></button>
       </div>
@@ -1528,10 +1795,19 @@
         <button type="button" class="latest-btn is-latest" id="latestRoundBtn">⏭ 最新</button>
       </div>
 
+      <!-- Numbers3 Mini Special Mode Bar -->
+      <div class="n3-mode-bar" id="n3ModeBar">
+        <button type="button" class="n3-mode-btn active" id="btnN3Standard">🎲 通常3桁予測（全桁）</button>
+        <button type="button" class="n3-mode-btn" id="btnN3Mini">🎯 ミニ専用予測（下2桁特化）</button>
+      </div>
+
       <!-- Carryover Shimmer Banner -->
       <div class="carryover-banner" id="carryoverBanner">
-        <span>👑 キャリーオーバー発生中：</span>
-        <span id="carryoverAmountText">0円</span>
+        <div>
+          <span>👑 キャリーオーバー発生中：</span>
+          <span id="carryoverAmountText">0円</span>
+        </div>
+        <span class="co-strategy-sub">⚡ 1等独り占め戦略：32以上の高数字帯を自動ブースト中</span>
       </div>
 
       <!-- Past Official Draw Banner -->
@@ -1547,7 +1823,7 @@
       <!-- Stacked Single-Row Utility Buttons -->
       <div class="utility-stack">
         <button type="button" class="utility-btn" id="openCalendarBtn">
-          <span>📅 14日間開運暦（六曜・吉日・抽選日一覧）</span>
+          <span>📅 14日間開運暦（六曜・一粒万倍日・大安）</span>
           <span class="sub-pill">別画面で開く ↗</span>
         </button>
 
@@ -1560,6 +1836,11 @@
       <!-- Collapsible Condition Drawer -->
       <div class="condition-drawer" id="conditionDrawer">
         <div class="condition-guide" id="conditionGuideText"></div>
+        <div class="drought-insight-bar" id="droughtInsightBar"></div>
+        <div class="preset-btn-row">
+          <button type="button" class="preset-btn" id="btnPresetExcludeLast">🚫 前回当選を全外し<br>（全除外＆即再抽選）</button>
+          <button type="button" class="preset-btn" id="btnPresetDroughtAxis">🎯 未出現TOPを<br>軸固定＆即再抽選</button>
+        </div>
         <div class="full-axis-notice" id="bingoFullAxisNotice">※全8枠を軸固定したため、3口すべて同一の確定目を表示しています</div>
         <div class="legend-row">
           <div class="legend-items">
@@ -1608,7 +1889,7 @@
   <div class="modal-backdrop" id="calendarModal">
     <div class="modal-panel">
       <div class="modal-header">
-        <h2 class="modal-title">📅 14日間開運暦（吉日・新月満月・抽選日）</h2>
+        <h2 class="modal-title">📅 14日間開運暦・抽選日一覧</h2>
         <button type="button" class="modal-close-btn" data-close="calendarModal">✕ 閉じる</button>
       </div>
       <div class="modal-body" id="calendarModalBody"></div>
@@ -1620,7 +1901,7 @@
 
   <script>
     /**
-     * 宝くじ予測アプリ（ナンバーズ買い方記録＆精密照合搭載・最終決定版）
+     * 宝くじ予測アプリ（ミニ専用予測モード・3口一括記録・専門家レビュー完全反映版）
      */
     const LOTTERY_CONFIG = {
       numbers3: {
@@ -1681,17 +1962,19 @@
 
     const APP_STATE = {
       currentType: 'numbers3',
+      n3MiniMode: false,
       targetRounds: {},
       selectedRound: 7065,
       isCustomMode: false,
       customSeedOffset: 0,
+      soundEnabled: true,
       conditions: {
-        numbers3: { axis: [], exclude: [] },
-        numbers4: { axis: [], exclude: [] },
-        miniloto: { axis: [], exclude: [] },
-        loto6: { axis: [], exclude: [] },
-        loto7: { axis: [], exclude: [] },
-        bingo5: { axis: Array(8).fill(null), exclude: Array(8).fill(null) }
+        numbers3: { axis: [], exclude: [], bypassExcludeLimit: false },
+        numbers4: { axis: [], exclude: [], bypassExcludeLimit: false },
+        miniloto: { axis: [], exclude: [], bypassExcludeLimit: false },
+        loto6: { axis: [], exclude: [], bypassExcludeLimit: false },
+        loto7: { axis: [], exclude: [], bypassExcludeLimit: false },
+        bingo5: { axis: Array(8).fill(null), exclude: Array(8).fill(null), bypassExcludeLimit: false }
       },
       historyData: {},
       carryoverInfo: {
@@ -1699,7 +1982,89 @@
         loto7: { amount: 642185400, short: '6.4億' }
       },
       tickets: [],
+      ledgerFilterType: 'ALL',
+      ledgerFilterStatus: 'ALL',
       isCloudSynced: false
+    };
+
+    /* ================= CUTE WEB AUDIO SOUND ENGINE ================= */
+    const SOUND_FX = {
+      ctx: null,
+      ensureContext() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) {
+            this.ctx = new AudioCtx();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+        return this.ctx;
+      },
+      playTone(freq, type, duration, delay = 0, vol = 0.08, endFreq = null) {
+        if (!APP_STATE.soundEnabled) return;
+        const ctx = this.ensureContext();
+        if (!ctx) return;
+
+        const now = ctx.currentTime + delay;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (endFreq !== null) {
+          osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+        }
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(vol, now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      },
+      play(kind) {
+        if (!APP_STATE.soundEnabled) return;
+        switch (kind) {
+          case 'tab':
+            this.playTone(460, 'sine', 0.085, 0, 0.09, 640);
+            break;
+          case 'step':
+            this.playTone(880, 'triangle', 0.045, 0, 0.06, 660);
+            break;
+          case 'axis':
+            this.playTone(784, 'sine', 0.14, 0, 0.09);
+            this.playTone(1046.5, 'sine', 0.18, 0.045, 0.07);
+            break;
+          case 'exclude':
+            this.playTone(340, 'triangle', 0.09, 0, 0.08, 220);
+            break;
+          case 'clear':
+            this.playTone(580, 'sine', 0.11, 0, 0.07, 390);
+            break;
+          case 'limit':
+            this.playTone(300, 'sine', 0.06, 0, 0.07);
+            this.playTone(260, 'sine', 0.08, 0.075, 0.07);
+            break;
+          case 'predict':
+            this.playTone(523.25, 'sine', 0.07, 0.00, 0.07);
+            this.playTone(659.25, 'sine', 0.07, 0.05, 0.07);
+            this.playTone(783.99, 'sine', 0.07, 0.10, 0.08);
+            this.playTone(1046.5, 'sine', 0.22, 0.15, 0.09);
+            break;
+          case 'coin':
+            this.playTone(1318.5, 'sine', 0.08, 0.00, 0.07);
+            this.playTone(1760.0, 'sine', 0.25, 0.055, 0.08);
+            break;
+          case 'modal':
+            this.playTone(520, 'sine', 0.09, 0, 0.07, 720);
+            break;
+        }
+      }
     };
 
     /* ================= DETERMINISTIC PRNG ================= */
@@ -1761,6 +2126,154 @@
       return Math.round(yen / 10000).toLocaleString() + '万';
     }
 
+    /* ================= PRECISION LUNAR & AUSPICIOUS CALENDAR (2025-2030) ================= */
+    const LUNAR_NEW_MOONS = [
+      '2025-01-29','2025-02-28','2025-03-29','2025-04-28','2025-05-27','2025-06-25',
+      '2025-07-25','2025-08-23','2025-09-22','2025-10-21','2025-11-20','2025-12-20',
+      '2026-01-19','2026-02-17','2026-03-19','2026-04-17','2026-05-17','2026-06-15',
+      '2026-07-14','2026-08-13','2026-09-11','2026-10-11','2026-11-09','2026-12-09',
+      '2027-01-08','2027-02-07','2027-03-08','2027-04-07','2027-05-06','2027-06-05',
+      '2027-07-04','2027-08-03','2027-09-01','2027-10-01','2027-10-30','2027-11-29',
+      '2027-12-28','2028-01-27','2028-02-25','2028-03-26','2028-04-24','2028-05-24',
+      '2028-06-22','2028-07-22','2028-08-20','2028-09-19','2028-10-18','2028-11-17',
+      '2028-12-16','2029-01-15','2029-02-13','2029-03-15','2029-04-14','2029-05-13',
+      '2029-06-12','2029-07-11','2029-08-10','2029-09-08','2029-10-08','2029-11-06',
+      '2029-12-06','2030-01-04','2030-02-03','2030-03-04','2030-04-03','2030-05-02',
+      '2030-06-01','2030-07-01','2030-07-30','2030-08-29','2030-09-27','2030-10-27',
+      '2030-11-25','2030-12-25'
+    ];
+
+    const LUNAR_MONTH_NUMS = [
+      1,2,3,4,5,6, 6,7,8,9,10,11,
+      12,1,2,3,4,5, 6,7,8,9,10,11,
+      12,1,2,3,4,5, 6,7,8,9,10,11,
+      12,1,2,3,4,5, 5,6,7,8,9,10,
+      11,12,1,2,3,4, 5,6,7,8,9,10,
+      11,12,1,2,3,4, 5,6,7,8,9,10,
+      11,12
+    ];
+
+    function getAuspiciousInfoForDate(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = dateObj.getMonth() + 1;
+      const d = dateObj.getDate();
+      const targetUtc = Date.UTC(y, m - 1, d);
+
+      const baseUtc = Date.UTC(2000, 0, 1);
+      const diffDays = Math.floor((targetUtc - baseUtc) / 86400000);
+      const stemIdx = ((4 + diffDays) % 10 + 10) % 10;
+      const branchIdx = ((6 + diffDays) % 12 + 12) % 12;
+
+      const STEMS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+      const BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+      const kanshi = STEMS[stemIdx] + BRANCHES[branchIdx];
+
+      const setsuDays = [0, 5, 4, 6, 5, 5, 6, 7, 7, 7, 8, 7, 7];
+      let setsuMonth = m - 1;
+      if (d < setsuDays[m]) {
+        setsuMonth -= 1;
+      }
+      if (setsuMonth <= 0) setsuMonth += 12;
+
+      let lunarMonth = 1;
+      let lunarDay = 1;
+      let foundIdx = -1;
+      for (let i = LUNAR_NEW_MOONS.length - 1; i >= 0; i--) {
+        const [ny, nm, nd] = LUNAR_NEW_MOONS[i].split('-').map(Number);
+        const nmUtc = Date.UTC(ny, nm - 1, nd);
+        if (targetUtc >= nmUtc) {
+          foundIdx = i;
+          lunarMonth = LUNAR_MONTH_NUMS[i];
+          lunarDay = Math.floor((targetUtc - nmUtc) / 86400000) + 1;
+          break;
+        }
+      }
+      if (foundIdx === -1) {
+        const refNewMoonUtc = Date.UTC(2026, 10, 9);
+        const synodicMonth = 29.530588853;
+        const daysSinceRef = (targetUtc - refNewMoonUtc) / 86400000;
+        const lunarAge = ((daysSinceRef % synodicMonth) + synodicMonth) % synodicMonth;
+        lunarDay = Math.floor(lunarAge) + 1;
+        lunarMonth = ((m + 9) % 12) + 1;
+      }
+
+      const rokuyoNames = ['大安', '赤口', '先勝', '友引', '先負', '仏滅'];
+      const rokuyo = rokuyoNames[(lunarMonth + lunarDay) % 6];
+
+      const moonTags = [];
+      if (lunarDay === 1) moonTags.push('🌑新月');
+      if (lunarDay === 15 || lunarDay === 16) moonTags.push('🌕満月');
+
+      const ichiryuMap = {
+        1: [1, 6],
+        2: [9, 2],
+        3: [0, 3],
+        4: [3, 4],
+        5: [5, 6],
+        6: [9, 6],
+        7: [0, 7],
+        8: [3, 8],
+        9: [9, 6],
+        10: [9, 10],
+        11: [11, 0],
+        12: [3, 0]
+      };
+      const tags = [];
+      if (ichiryuMap[setsuMonth] && ichiryuMap[setsuMonth].includes(branchIdx)) {
+        tags.push('一粒万倍日');
+      }
+
+      let season = 0;
+      if (setsuMonth >= 1 && setsuMonth <= 3) season = 0;
+      else if (setsuMonth >= 4 && setsuMonth <= 6) season = 1;
+      else if (setsuMonth >= 7 && setsuMonth <= 9) season = 2;
+      else season = 3;
+
+      const tenshaPairs = [
+        [4, 2],
+        [0, 6],
+        [4, 8],
+        [0, 0]
+      ];
+      if (stemIdx === tenshaPairs[season][0] && branchIdx === tenshaPairs[season][1]) {
+        tags.push('天赦日');
+      }
+
+      if (branchIdx === 2) tags.push('寅の日');
+      if (branchIdx === 5) {
+        if (stemIdx === 5) tags.push('己巳の日');
+        else tags.push('巳の日');
+      }
+
+      const dow = dateObj.getDay();
+      const draws = [];
+      if (dow === 1) {
+        draws.push({ name: 'ロト6', major: true });
+        draws.push({ name: 'N3・N4', major: false });
+      } else if (dow === 2) {
+        draws.push({ name: 'ミニロト', major: true });
+        draws.push({ name: 'N3・N4', major: false });
+      } else if (dow === 3) {
+        draws.push({ name: 'ビンゴ5', major: true });
+        draws.push({ name: 'N3・N4', major: false });
+      } else if (dow === 4) {
+        draws.push({ name: 'ロト6', major: true });
+        draws.push({ name: 'N3・N4', major: false });
+      } else if (dow === 5) {
+        draws.push({ name: 'ロト7', major: true });
+        draws.push({ name: 'N3・N4', major: false });
+      }
+
+      return {
+        kanshi,
+        lunarStr: `旧暦${lunarMonth}月${lunarDay}日(${kanshi})`,
+        rokuyo,
+        tags,
+        moonTags,
+        draws
+      };
+    }
+
     /* ================= STANDALONE ARCHIVE GENERATOR ================= */
     function generateFallbackArchive(type) {
       const cfg = LOTTERY_CONFIG[type];
@@ -1818,9 +2331,15 @@
         if (savedTickets) {
           APP_STATE.tickets = JSON.parse(savedTickets);
         }
+        const savedSound = localStorage.getItem('lottery_pred_sound_v1');
+        if (savedSound !== null) {
+          APP_STATE.soundEnabled = savedSound === 'true';
+        }
       } catch (e) {
         APP_STATE.tickets = [];
       }
+
+      updateSoundButtonUI();
 
       Object.keys(LOTTERY_CONFIG).forEach(type => {
         APP_STATE.historyData[type] = generateFallbackArchive(type);
@@ -1879,6 +2398,18 @@
       renderAll();
     }
 
+    function updateSoundButtonUI() {
+      const btn = document.getElementById('toggleSoundBtn');
+      if (!btn) return;
+      if (APP_STATE.soundEnabled) {
+        btn.textContent = '🔊 効果音 ON';
+        btn.classList.remove('sound-off');
+      } else {
+        btn.textContent = '🔇 効果音 OFF';
+        btn.classList.add('sound-off');
+      }
+    }
+
     function updateSyncStatusUI() {
       const dot = document.getElementById('syncDot');
       const label = document.getElementById('syncLabel');
@@ -1924,6 +2455,11 @@
       const currentDrought = {};
       const reboundRatio = {};
 
+      const posFreqAll = Array.from({ length: cfg.pick }, () => Array(10).fill(0));
+      const posFreqRecent = Array.from({ length: cfg.pick }, () => Array(10).fill(0));
+      const posLastSeen = Array.from({ length: cfg.pick }, () => Array(10).fill(-1));
+      const posRebound = Array.from({ length: cfg.pick }, () => Array(10).fill(1.0));
+
       for (let n = cfg.min; n <= cfg.max; n++) {
         freqAll[n] = 0;
         freqRecent[n] = 0;
@@ -1932,26 +2468,62 @@
 
       let sumAllTotal = 0;
       let sumRecentTotal = 0;
+      let miniSumAllTotal = 0;
+      let miniSumRecentTotal = 0;
       let consecutiveDrawsCount = 0;
+      let duplicateDrawsAllCount = 0;
+      let duplicateDrawsRecentCount = 0;
+      let drawsSinceLastDuplicate = totalCount;
 
       pastDraws.forEach((draw, idx) => {
         const s = draw.main.reduce((a, b) => a + b, 0);
         sumAllTotal += s;
+        if (type === 'numbers3' && draw.main.length >= 3) {
+          miniSumAllTotal += (draw.main[1] + draw.main[2]);
+        }
         if (countConsecutivePairs(draw.main, cfg.sorted) > 0) {
           consecutiveDrawsCount++;
         }
-        draw.main.forEach(num => {
+        if (new Set(draw.main).size < draw.main.length) {
+          duplicateDrawsAllCount++;
+          drawsSinceLastDuplicate = totalCount - 1 - idx;
+        }
+        draw.main.forEach((num, posIdx) => {
           freqAll[num] = (freqAll[num] || 0) + 1;
           lastSeenIndex[num] = idx;
+          if ((type === 'numbers3' || type === 'numbers4') && posIdx < cfg.pick) {
+            posFreqAll[posIdx][num]++;
+            posLastSeen[posIdx][num] = idx;
+          }
         });
       });
 
       recentDraws.forEach(draw => {
         sumRecentTotal += draw.main.reduce((a, b) => a + b, 0);
-        draw.main.forEach(num => {
+        if (type === 'numbers3' && draw.main.length >= 3) {
+          miniSumRecentTotal += (draw.main[1] + draw.main[2]);
+        }
+        if (new Set(draw.main).size < draw.main.length) {
+          duplicateDrawsRecentCount++;
+        }
+        draw.main.forEach((num, posIdx) => {
           freqRecent[num] = (freqRecent[num] || 0) + 1;
+          if ((type === 'numbers3' || type === 'numbers4') && posIdx < cfg.pick) {
+            posFreqRecent[posIdx][num]++;
+          }
         });
       });
+
+      if (type === 'numbers3' || type === 'numbers4') {
+        for (let pos = 0; pos < cfg.pick; pos++) {
+          for (let d = 0; d <= 9; d++) {
+            const cnt = posFreqAll[pos][d];
+            const meanGap = cnt > 0 ? (totalCount / cnt) : 10.0;
+            const drought = posLastSeen[pos][d] >= 0 ? (totalCount - 1 - posLastSeen[pos][d]) : totalCount;
+            posRebound[pos][d] = drought / Math.max(1, meanGap);
+          }
+        }
+      }
 
       const theoreticalInterval = type === 'bingo5'
         ? 5.0
@@ -1974,6 +2546,14 @@
       const dynamicMeanSum = Math.round(allMeanSum * 0.6 + recentMeanSum * 0.4);
       const consecutiveRate = totalCount > 0 ? Math.round((consecutiveDrawsCount / totalCount) * 100) : 55;
 
+      const miniAllMeanSum = totalCount > 0 ? Math.round(miniSumAllTotal / totalCount) : 9;
+      const miniRecentMeanSum = recentDraws.length > 0 ? Math.round(miniSumRecentTotal / recentDraws.length) : miniAllMeanSum;
+      const miniDynamicMeanSum = Math.round(miniAllMeanSum * 0.6 + miniRecentMeanSum * 0.4);
+
+      const defaultDupRate = type === 'numbers3' ? 0.28 : (type === 'numbers4' ? 0.496 : 0);
+      const allDupRate = totalCount > 0 ? (duplicateDrawsAllCount / totalCount) : defaultDupRate;
+      const recentDupRate = recentDraws.length > 0 ? (duplicateDrawsRecentCount / recentDraws.length) : allDupRate;
+
       return {
         totalCount,
         recentCount: recentDraws.length,
@@ -1982,11 +2562,19 @@
         avgInterval,
         currentDrought,
         reboundRatio,
+        posFreqAll,
+        posFreqRecent,
+        posRebound,
         lastDraw,
         allMeanSum,
         recentMeanSum,
         dynamicMeanSum,
-        consecutiveRate
+        miniRecentMeanSum,
+        miniDynamicMeanSum,
+        consecutiveRate,
+        allDupRate,
+        recentDupRate,
+        drawsSinceLastDuplicate
       };
     }
 
@@ -1994,29 +2582,39 @@
       const cfg = LOTTERY_CONFIG[type];
       const stats = analyzeCumulativeStats(type, round);
       const cond = APP_STATE.conditions[type];
+      const isMiniSpecial = (type === 'numbers3' && APP_STATE.n3MiniMode);
+
+      const isTarget = round === APP_STATE.targetRounds[type];
+      const history = APP_STATE.historyData[type] || [];
+      const pastDrawObj = !isTarget ? history.find(d => d.round === round) : null;
+      const hasCarryover = (type === 'loto6' || type === 'loto7') && (
+        isTarget
+          ? (APP_STATE.carryoverInfo[type]?.amount > 0)
+          : (pastDrawObj && pastDrawObj.carryover > 0)
+      );
 
       const models = [
         {
           rank: '第1推奨',
-          title: '長期収束 × 短期モメンタム融合モデル',
+          title: isMiniSpecial ? '【ミニ特化】下2桁・長期収束×短期融合' : '長期収束 × 短期モメンタム融合モデル',
           mode: 'hybrid'
         },
         {
           rank: '第2推奨',
-          title: '全期間未出現周期・リバウンドモデル',
+          title: isMiniSpecial ? '【ミニ特化】下2桁・未出現周期リバウンド' : '全期間未出現周期・リバウンドモデル',
           mode: 'rebound'
         },
         {
           rank: '第3推奨',
-          title: '最新トレンド＆黄金比バランスモデル',
+          title: isMiniSpecial ? '【ミニ特化】下2桁・最新トレンド黄金比' : '最新トレンド＆黄金比バランスモデル',
           mode: 'harmony'
         }
       ];
 
       return models.map((model, mIdx) => {
         const seedStr = isCustom
-          ? `custom_${type}_${round}_m${mIdx}_off${customOffset}_${JSON.stringify(cond)}`
-          : `official_${type}_${round}_m${mIdx}_n${stats.totalCount}`;
+          ? `custom_${type}_${isMiniSpecial ? 'mini_' : ''}${round}_m${mIdx}_off${customOffset}_${JSON.stringify(cond)}`
+          : `official_${type}_${isMiniSpecial ? 'mini_' : ''}${round}_m${mIdx}_n${stats.totalCount}_co${hasCarryover ? 1 : 0}`;
         const rng = mulberry32(stringToSeed(seedStr));
 
         let numbers = [];
@@ -2061,6 +2659,9 @@
                 weight *= (0.72 + rng() * 0.56);
                 candidates.push({ n, weight });
               }
+              if (candidates.length === 0) {
+                candidates.push({ n: minV, weight: 1.0 });
+              }
               candidates.sort((a, b) => b.weight - a.weight);
               temp.push(candidates[0].n);
             }
@@ -2086,55 +2687,172 @@
             ? `全${stats.totalCount}回の蓄積データから各枠の実測「平均出現間隔」を超過した限界突破（リバウンド待機）数字を優先抽出した反発狙い盤面。`
             : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比・隣接連番（${consecCount}組）の偏りをリアルタイム補正した最適バランス盤面。`;
 
+        } else if (isMiniSpecial) {
+          // ナンバーズ3「ミニ（下2桁）専用特化エンジン」：十の位(pos=1)・一の位(pos=2)のみに特化
+          const axisList = isCustom ? [...cond.axis] : [];
+          const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
+          const expectedPosCount = stats.totalCount / 10;
+
+          const posPools = {};
+          [1, 2].forEach(pos => {
+            const scoredPosDigits = [];
+            for (let d = 0; d <= 9; d++) {
+              if (excludeSet.has(d)) continue;
+              const pAll = stats.posFreqAll[pos][d] || 0;
+              const pRec = stats.posFreqRecent[pos][d] || 0;
+              const pGap = Math.max(0.25, 1 + (expectedPosCount - pAll) / Math.max(8, expectedPosCount));
+              const pReb = stats.posRebound[pos][d] || 1.0;
+              const isPosPull = stats.lastDraw && stats.lastDraw.main[pos] === d ? 1.28 : 1.0;
+              const isPosSlide = stats.lastDraw && Math.abs(stats.lastDraw.main[pos] - d) === 1 ? 1.18 : 1.0;
+
+              let score = 1.0;
+              if (model.mode === 'hybrid') {
+                score = pGap * (1 + pRec * 0.28) * isPosPull * isPosSlide;
+              } else if (model.mode === 'rebound') {
+                score = Math.pow(Math.max(0.5, pReb), 1.48);
+              } else {
+                score = (1 + pRec * 0.32) * isPosSlide;
+              }
+              score *= (0.74 + rng() * 0.52);
+              scoredPosDigits.push({ d, score });
+            }
+            if (scoredPosDigits.length === 0) {
+              scoredPosDigits.push({ d: axisList[0] ?? 0, score: 1.0 });
+            }
+            scoredPosDigits.sort((a, b) => b.score - a.score);
+            posPools[pos] = scoredPosDigits.slice(0, Math.min(5, scoredPosDigits.length));
+          });
+
+          let bestPair = null;
+          let bestPenalty = Infinity;
+          const targetMiniSum = model.mode === 'harmony' ? stats.miniRecentMeanSum : stats.miniDynamicMeanSum;
+
+          for (let attempt = 0; attempt < 55; attempt++) {
+            let tens = posPools[1][Math.floor(rng() * posPools[1].length)].d;
+            let ones = posPools[2][Math.floor(rng() * posPools[2].length)].d;
+
+            if (axisList.length > 0 && tens !== axisList[0] && ones !== axisList[0]) {
+              if (rng() < 0.5) tens = axisList[0];
+              else ones = axisList[0];
+            }
+
+            // 下2桁ゾロ目（約10%発生）を適度に考慮
+            if (tens === ones && rng() > 0.14 && posPools[2].length > 1) {
+              ones = posPools[2][(Math.floor(rng() * (posPools[2].length - 1)) + 1) % posPools[2].length].d;
+            }
+
+            const miniSum = tens + ones;
+            const consec = Math.abs(tens - ones) === 1 ? 1 : 0;
+            const targetConsec = model.mode === 'hybrid' ? 1 : 0;
+            const penalty = Math.abs(miniSum - targetMiniSum) * 1.5 + Math.abs(consec - targetConsec) * 2.5;
+
+            if (penalty < bestPenalty) {
+              bestPenalty = penalty;
+              bestPair = [tens, ones];
+            }
+          }
+
+          numbers = [null, bestPair[0], bestPair[1]];
+          const activeDigits = [bestPair[0], bestPair[1]];
+          const sumVal = bestPair[0] + bestPair[1];
+          const oddCount = activeDigits.filter(n => n % 2 === 1).length;
+          const evenCount = 2 - oddCount;
+          const consecCount = Math.abs(bestPair[0] - bestPair[1]) === 1 ? 1 : 0;
+          const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』を下2桁に配置し、` : '';
+
+          rationale = model.mode === 'hybrid'
+            ? `${axisPrefix}百の位を除外し、全${stats.totalCount}回の「十の位・一の位」専用出現周期と引っ張り相関・下2桁合計平均（${stats.miniDynamicMeanSum}）を融合したミニ本命。`
+            : model.mode === 'rebound'
+            ? `${axisPrefix}十の位・一の位それぞれの実測「平均出現間隔」を超過した下2桁リバウンド待機数字をピンポイント抽出したミニ反発狙い。`
+            : `${axisPrefix}直近30回の十の位・一の位トレンドと下2桁合計移動平均（${stats.miniRecentMeanSum}）・奇偶比を最適補正したミニ王道バランス。`;
+
+          return {
+            rank: model.rank,
+            title: model.title,
+            numbers,
+            isMiniSpecial: true,
+            rationale,
+            sumVal,
+            oddEvenStr: `奇${oddCount}:偶${evenCount}`,
+            consecStr: `下2桁連番${consecCount}組`,
+            learnedCount: stats.totalCount
+          };
+
         } else if (type === 'numbers3' || type === 'numbers4') {
           const axisList = isCustom ? [...cond.axis] : [];
           const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
+          const expectedPosCount = stats.totalCount / 10;
 
-          const scoredDigits = [];
-          const expectedDigitCount = (stats.totalCount * cfg.pick) / 10;
+          const expectedDupGap = 1 / Math.max(0.15, stats.allDupRate);
+          const isDupOverdue = stats.drawsSinceLastDuplicate >= Math.floor(expectedDupGap) || stats.recentDupRate < stats.allDupRate * 0.85;
+          const dupBias = model.mode === 'rebound'
+            ? (isDupOverdue ? 0.65 : 0.35)
+            : model.mode === 'hybrid'
+            ? (type === 'numbers4' ? 0.52 : 0.34)
+            : (type === 'numbers4' ? 0.42 : 0.22);
 
-          for (let d = 0; d <= 9; d++) {
-            if (excludeSet.has(d)) continue;
-            const allFreq = stats.freqAll[d] || 0;
-            const recFreq = stats.freqRecent[d] || 0;
-            const convergenceGap = Math.max(0.25, 1 + (expectedDigitCount - allFreq) / Math.max(10, expectedDigitCount));
-            const rebScore = stats.reboundRatio[d] || 1.0;
-            const isPull = stats.lastDraw && stats.lastDraw.main.includes(d) ? 1.25 : 1.0;
-            const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - d) === 1) ? 1.15 : 1.0;
+          const posPools = [];
+          for (let pos = 0; pos < cfg.pick; pos++) {
+            const scoredPosDigits = [];
+            for (let d = 0; d <= 9; d++) {
+              if (excludeSet.has(d)) continue;
+              const pAll = stats.posFreqAll[pos][d] || 0;
+              const pRec = stats.posFreqRecent[pos][d] || 0;
+              const pGap = Math.max(0.25, 1 + (expectedPosCount - pAll) / Math.max(8, expectedPosCount));
+              const pReb = stats.posRebound[pos][d] || 1.0;
+              const isPosPull = stats.lastDraw && stats.lastDraw.main[pos] === d ? 1.26 : 1.0;
+              const isPosSlide = stats.lastDraw && Math.abs(stats.lastDraw.main[pos] - d) === 1 ? 1.16 : 1.0;
 
-            let score = 1.0;
-            if (model.mode === 'hybrid') {
-              score = convergenceGap * (1 + recFreq * 0.14) * isPull * isSlide;
-            } else if (model.mode === 'rebound') {
-              score = Math.pow(Math.max(0.5, rebScore), 1.45);
-            } else {
-              score = (1 + recFreq * 0.18) * isSlide;
+              let score = 1.0;
+              if (model.mode === 'hybrid') {
+                score = pGap * (1 + pRec * 0.25) * isPosPull * isPosSlide;
+              } else if (model.mode === 'rebound') {
+                score = Math.pow(Math.max(0.5, pReb), 1.45);
+              } else {
+                score = (1 + pRec * 0.3) * isPosSlide;
+              }
+              score *= (0.75 + rng() * 0.5);
+              scoredPosDigits.push({ d, score });
             }
-            score *= (0.75 + rng() * 0.5);
-            scoredDigits.push({ d, score });
+            if (scoredPosDigits.length === 0) {
+              scoredPosDigits.push({ d: axisList[0] ?? 0, score: 1.0 });
+            }
+            scoredPosDigits.sort((a, b) => b.score - a.score);
+            posPools.push(scoredPosDigits.slice(0, Math.min(5, scoredPosDigits.length)));
           }
-
-          scoredDigits.sort((a, b) => b.score - a.score);
-          const pool = scoredDigits.slice(0, Math.min(7, scoredDigits.length));
 
           let bestCombo = null;
           let bestPenalty = Infinity;
           const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
 
-          for (let attempt = 0; attempt < 45; attempt++) {
-            const temp = [...axisList];
-            while (temp.length < cfg.pick) {
-              const pickObj = pool[Math.floor(rng() * pool.length)];
-              temp.push(pickObj.d);
+          for (let attempt = 0; attempt < 65; attempt++) {
+            const temp = [];
+            for (let pos = 0; pos < cfg.pick; pos++) {
+              const pool = posPools[pos];
+              temp.push(pool[Math.floor(rng() * pool.length)].d);
             }
-            for (let i = temp.length - 1; i > 0; i--) {
-              const j = Math.floor(rng() * (i + 1));
-              [temp[i], temp[j]] = [temp[j], temp[i]];
+            if (axisList.length > 0 && !temp.includes(axisList[0])) {
+              const targetPos = Math.floor(rng() * cfg.pick);
+              temp[targetPos] = axisList[0];
             }
+
+            const wantDuplicate = rng() < dupBias;
+            if (wantDuplicate && new Set(temp).size === cfg.pick) {
+              const srcPos = Math.floor(rng() * cfg.pick);
+              let dstPos = (srcPos + 1 + Math.floor(rng() * (cfg.pick - 1))) % cfg.pick;
+              const pivotDigit = axisList.length > 0 ? axisList[0] : temp[srcPos];
+              if (axisList.length > 0 && temp[dstPos] === axisList[0] && temp.filter(x => x === axisList[0]).length === 1) {
+                dstPos = srcPos;
+              }
+              temp[dstPos] = pivotDigit;
+            }
+
             const sum = temp.reduce((a, b) => a + b, 0);
             const consec = countConsecutivePairs(temp, false);
+            const hasDup = new Set(temp).size < cfg.pick;
             const targetConsec = model.mode === 'hybrid' ? 1 : 0;
-            const penalty = Math.abs(sum - targetSum) * 1.4 + Math.abs(consec - targetConsec) * 3.5;
+            const dupPenalty = (wantDuplicate === hasDup) ? 0 : 2.8;
+            const penalty = Math.abs(sum - targetSum) * 1.4 + Math.abs(consec - targetConsec) * 3.2 + dupPenalty;
 
             if (penalty < bestPenalty) {
               bestPenalty = penalty;
@@ -2144,13 +2862,16 @@
           numbers = bestCombo;
 
           const consecCount = countConsecutivePairs(numbers, false);
-          const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』をいずれかの桁に配置し、` : '';
+          const uniqueLen = new Set(numbers).size;
+          const dupCount = cfg.pick - uniqueLen;
+          const dupLabel = dupCount >= 2 ? 'トリプル・重複構成' : (dupCount === 1 ? 'ダブル（同数字重複）構成' : 'オールシングル構成');
+          const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』を配置し、` : '';
 
           rationale = model.mode === 'hybrid'
-            ? `${axisPrefix}全${stats.totalCount}回の長期出現率乖離に、前回からの引っ張り・隣数字モメンタムと連番（${consecCount}組）を掛け合わせた進化本命配列。`
+            ? `${axisPrefix}全${stats.totalCount}回の「桁別出現周期」と実測重複率（${Math.round(stats.allDupRate * 100)}%）を融合した【${dupLabel}】の進化本命配列。`
             : model.mode === 'rebound'
-            ? `${axisPrefix}全${stats.totalCount}回分の実測「平均出現間隔」を大きく上回って停滞している限界突破数字を優先抽出したリバウンド狙い配列。`
-            : `${axisPrefix}直近30回の合計値移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りをリアルタイム補正した王道バランス配列。`;
+            ? `${axisPrefix}各位の平均出現間隔超過数字に加え、重複未出現（${stats.drawsSinceLastDuplicate}回ぶり）周期を織り込んだ【${dupLabel}】の反発狙い配列。`
+            : `${axisPrefix}直近30回の桁別トレンドと合計値移動平均（${stats.recentMeanSum}）・奇偶比・連番（${consecCount}組）を補正した【${dupLabel}】配列。`;
 
         } else {
           // Loto6, Loto7, MiniLoto
@@ -2169,13 +2890,15 @@
             const isPull = stats.lastDraw && stats.lastDraw.main.includes(n) ? 1.30 : 1.0;
             const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - n) === 1) ? 1.18 : 1.0;
 
+            const coHighBoost = (hasCarryover && n >= 32) ? 1.32 : 1.0;
+
             let weight = 1.0;
             if (model.mode === 'hybrid') {
-              weight = convergenceGap * (1 + recCount * 0.25) * isPull * isSlide;
+              weight = convergenceGap * (1 + recCount * 0.25) * isPull * isSlide * coHighBoost;
             } else if (model.mode === 'rebound') {
-              weight = Math.pow(Math.max(0.5, rebScore), 1.45) * convergenceGap;
+              weight = Math.pow(Math.max(0.5, rebScore), 1.45) * convergenceGap * coHighBoost;
             } else {
-              weight = (1 + recCount * 0.22) * isSlide;
+              weight = (1 + recCount * 0.22) * isSlide * coHighBoost;
             }
             weight *= (0.72 + rng() * 0.56);
             scoredNums.push({ n, weight });
@@ -2186,7 +2909,8 @@
 
           let bestSet = null;
           let bestPenalty = Infinity;
-          const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+          const baseTargetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+          const targetSum = hasCarryover ? baseTargetSum + 10 : baseTargetSum;
 
           for (let attempt = 0; attempt < 70; attempt++) {
             const chosen = new Set(axisList);
@@ -2210,6 +2934,13 @@
             for (const item of shuffled) {
               if (chosen.size >= cfg.pick) break;
               chosen.add(item.n);
+            }
+
+            if (chosen.size < cfg.pick) {
+              for (let n = cfg.min; n <= cfg.max; n++) {
+                if (chosen.size >= cfg.pick) break;
+                chosen.add(n);
+              }
             }
 
             const arr = Array.from(chosen).sort((a, b) => a - b);
@@ -2236,12 +2967,13 @@
           const pullMatches = stats.lastDraw
             ? numbers.filter(n => stats.lastDraw.main.includes(n)).length
             : 0;
+          const coNote = hasCarryover ? 'さらにキャリーオーバー中のため誕生日数字(1〜31)を避け32以上の高数字帯を優遇し1等独り占めを狙う' : '';
 
           rationale = model.mode === 'hybrid'
-            ? `全${stats.totalCount}回の長期出現率乖離に、直近トレンドの引っ張り（${pullMatches}個）・隣数字モメンタム・連番（${consecCount}組）を融合した進化本命。`
+            ? `全${stats.totalCount}回の長期出現率乖離に、直近の引っ張り（${pullMatches}個）・隣数字・連番（${consecCount}組）を融合。${coNote}進化本命構成。`
             : model.mode === 'rebound'
-            ? `全${stats.totalCount}回の蓄積履歴から実測「平均出現間隔」を大きく超過した限界突破（リバウンド待機）数字を優先抽出した反発狙い構成。`
-            : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りをリアルタイム補正して導出した最適バランス構成。`;
+            ? `全${stats.totalCount}回の蓄積履歴から実測「平均出現間隔」を超過した限界突破（リバウンド待機）数字を優先抽出。${coNote}反発狙い構成。`
+            : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りを補正。${coNote}最適バランス構成。`;
         }
 
         const sumVal = numbers.reduce((a, b) => a + b, 0);
@@ -2253,6 +2985,7 @@
           rank: model.rank,
           title: model.title,
           numbers,
+          isMiniSpecial: false,
           rationale,
           sumVal,
           oddEvenStr: `奇${oddCount}:偶${evenCount}`,
@@ -2272,6 +3005,16 @@
       document.querySelectorAll('.lottery-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.type === type);
       });
+
+      // ナンバーズ3専用「ミニ特化モード」バーの表示制御
+      const n3Bar = document.getElementById('n3ModeBar');
+      if (type === 'numbers3') {
+        n3Bar.style.display = 'grid';
+        document.getElementById('btnN3Standard').classList.toggle('active', !APP_STATE.n3MiniMode);
+        document.getElementById('btnN3Mini').classList.toggle('active', APP_STATE.n3MiniMode);
+      } else {
+        n3Bar.style.display = 'none';
+      }
 
       document.getElementById('roundNumberText').textContent = `第${round}回`;
       const tagEl = document.getElementById('roundStatusTag');
@@ -2410,6 +3153,9 @@
           `;
         } else {
           const coins = rec.numbers.map((num, posIdx) => {
+            if (num === null) {
+              return `<span class="gold-coin is-wildcard" title="ミニ購入時は百の位不要">*</span>`;
+            }
             const disp = (type === 'numbers3' || type === 'numbers4') ? String(num) : String(num).padStart(2, '0');
             const isAxis = APP_STATE.isCustomMode && cond.axis.includes(num);
             let isMainHit = false;
@@ -2443,17 +3189,24 @@
           ? `<span class="mode-pill custom">条件反映・再抽選</span>`
           : `<span class="mode-pill official">公式本命（全${rec.learnedCount}回学習）</span>`;
 
-        // ナンバーズ3・4のときだけ買い方セレクターを表示
         let betTypeSelectHtml = '';
         if (type === 'numbers3') {
-          betTypeSelectHtml = `
-            <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ3買い方">
-              <option value="ボックス">ボックス</option>
-              <option value="ストレート">ストレート</option>
-              <option value="セット">セット</option>
-              <option value="ミニ">ミニ</option>
-            </select>
-          `;
+          if (rec.isMiniSpecial) {
+            betTypeSelectHtml = `
+              <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ3買い方">
+                <option value="ミニ" selected>ミニ（下2桁）</option>
+              </select>
+            `;
+          } else {
+            betTypeSelectHtml = `
+              <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ3買い方">
+                <option value="ボックス">ボックス</option>
+                <option value="ストレート">ストレート</option>
+                <option value="セット">セット</option>
+                <option value="ミニ">ミニ</option>
+              </select>
+            `;
+          }
         } else if (type === 'numbers4') {
           betTypeSelectHtml = `
             <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ4買い方">
@@ -2463,6 +3216,8 @@
             </select>
           `;
         }
+
+        const sumLabel = rec.isMiniSpecial ? `下2桁計: ${rec.sumVal}` : `サム値: ${rec.sumVal}`;
 
         return `
           <article class="prediction-card">
@@ -2477,7 +3232,7 @@
             <div class="rationale-box">${rec.rationale}</div>
             <div class="card-footer-row">
               <div class="stat-chips">
-                <span class="stat-chip">サム値: ${rec.sumVal}</span>
+                <span class="stat-chip">${sumLabel}</span>
                 <span class="stat-chip">${rec.oddEvenStr}</span>
                 <span class="stat-chip">${rec.consecStr}</span>
               </div>
@@ -2490,29 +3245,69 @@
         `;
       }).join('');
 
-      container.innerHTML = bingoNoticeBanner + cardsHtml;
+      const bulkSaveHtml = `
+        <div class="bulk-save-wrap">
+          <button type="button" class="bulk-save-btn" id="bulkSaveAllBtn">📋 推奨3口をまとめて購入台帳に記録</button>
+        </div>
+      `;
+
+      container.innerHTML = bingoNoticeBanner + cardsHtml + bulkSaveHtml;
 
       container.querySelectorAll('.save-ticket-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+          SOUND_FX.play('coin');
           const i = Number(btn.dataset.saveIdx);
           const selEl = document.getElementById(`betSelect_${i}`);
           const betType = selEl ? selEl.value : null;
-          saveTicketToLedger(recs[i], betType);
+          saveTicketToLedger(recs[i], betType, false);
         });
       });
+
+      const bulkBtn = document.getElementById('bulkSaveAllBtn');
+      if (bulkBtn) {
+        bulkBtn.addEventListener('click', () => {
+          SOUND_FX.play('coin');
+          for (let i = recs.length - 1; i >= 0; i--) {
+            const selEl = document.getElementById(`betSelect_${i}`);
+            const betType = selEl ? selEl.value : null;
+            saveTicketToLedger(recs[i], betType, true);
+          }
+          const cfg = LOTTERY_CONFIG[type];
+          showToast(`📒 ${cfg.name} 第${APP_STATE.selectedRound}回の推奨3口をまとめて購入台帳に記録しました！`);
+        });
+      }
     }
 
-    /* ================= CONDITION PAD (3x3 BINGO & AUTO-SWITCH LIMITS) ================= */
+    /* ================= CONDITION PAD & ONE-TOUCH PRESETS ================= */
     function renderConditionPad() {
       const type = APP_STATE.currentType;
       const cfg = LOTTERY_CONFIG[type];
       const cond = APP_STATE.conditions[type];
       const guideEl = document.getElementById('conditionGuideText');
+      const insightEl = document.getElementById('droughtInsightBar');
       const fullNoticeEl = document.getElementById('bingoFullAxisNotice');
       const padContainer = document.getElementById('conditionPadContainer');
 
+      const stats = analyzeCumulativeStats(type, APP_STATE.selectedRound);
+      const isDigits = (type === 'numbers3' || type === 'numbers4');
+      const droughtSorted = [];
+      for (let n = cfg.min; n <= cfg.max; n++) {
+        droughtSorted.push({
+          n,
+          drought: stats.currentDrought[n] || 0,
+          rebound: stats.reboundRatio[n] || 0
+        });
+      }
+      droughtSorted.sort((a, b) => b.drought - a.drought || b.rebound - a.rebound);
+      const top3Drought = droughtSorted.slice(0, 3).map(x => {
+        const lbl = isDigits ? String(x.n) : String(x.n).padStart(2, '0');
+        return `<strong>${lbl}</strong>(${x.drought}回ぶり)`;
+      }).join('・');
+      insightEl.innerHTML = `⏳ <strong>長期未出現TOP3：</strong>${top3Drought}`;
+
       if (type === 'bingo5') {
-        guideEl.innerHTML = `<strong>【${cfg.name} 3×3盤面・最適リミッター】</strong>各枠ごとに<strong>軸固定1個まで・除外1個まで</strong>設定可能。軸上限時は別数字タップで自動除外へ切り替わります。`;
+        const bypassNote = cond.bypassExcludeLimit ? ' <span style="color:#8B1E1E; font-weight:800;">（※現在「前回全外し」特例適用中）</span>' : '';
+        guideEl.innerHTML = `<strong>【${cfg.name} 3×3盤面・最適リミッター】</strong>通常は各枠<strong>軸1個・除外1個まで</strong>設定可能。${bypassNote}`;
         const allFixed = cond.axis.every(x => x !== null);
         fullNoticeEl.style.display = allFixed ? 'block' : 'none';
 
@@ -2557,8 +3352,10 @@
 
       } else {
         fullNoticeEl.style.display = 'none';
-        guideEl.innerHTML = `<strong>【${cfg.name} 最適リミッター】</strong><strong>軸固定は最大${cfg.maxAxis}個・除外は最大${cfg.maxExclude}個</strong>まで。軸固定が満員の状態で別数字をタップすると自動的に「除外(赤)」へ切り替わります。`;
-        const isDigits = (type === 'numbers3' || type === 'numbers4');
+        const bypassNote = cond.bypassExcludeLimit
+          ? `<br><span style="color:#8B1E1E; font-weight:800;">※「前回全外し」特例により、前回当選${cond.exclude.length}個すべてを除外中です。</span>`
+          : '';
+        guideEl.innerHTML = `<strong>【${cfg.name} 最適リミッター】</strong>通常は<strong>軸固定最大${cfg.maxAxis}個・除外最大${cfg.maxExclude}個</strong>まで（全外しボタン時のみ特例解除）。${bypassNote}`;
         let cells = '';
         for (let n = cfg.min; n <= cfg.max; n++) {
           const isAxis = cond.axis.includes(n);
@@ -2590,18 +3387,27 @@
         cond.axis.splice(axisIdx, 1);
         if (cond.exclude.length < cfg.maxExclude) {
           cond.exclude.push(num);
+          SOUND_FX.play('exclude');
         } else {
-          showToast(`除外は最大${cfg.maxExclude}個までのため解除しました`);
+          SOUND_FX.play('clear');
+          showToast(`除外は通常最大${cfg.maxExclude}個までのため解除しました`);
         }
       } else if (exclIdx !== -1) {
         cond.exclude.splice(exclIdx, 1);
+        if (cond.exclude.length <= cfg.maxExclude) {
+          cond.bypassExcludeLimit = false;
+        }
+        SOUND_FX.play('clear');
       } else {
         if (cond.axis.length < cfg.maxAxis) {
           cond.axis.push(num);
+          SOUND_FX.play('axis');
         } else if (cond.exclude.length < cfg.maxExclude) {
           cond.exclude.push(num);
+          SOUND_FX.play('exclude');
         } else {
-          showToast(`軸固定(最大${cfg.maxAxis})・除外(最大${cfg.maxExclude})ともに上限です`);
+          SOUND_FX.play('limit');
+          showToast(`軸固定(最大${cfg.maxAxis})・除外(通常最大${cfg.maxExclude})ともに上限です`);
           return;
         }
       }
@@ -2615,20 +3421,145 @@
       if (cond.axis[slot] === num) {
         cond.axis[slot] = null;
         cond.exclude[slot] = num;
+        SOUND_FX.play('exclude');
       } else if (cond.exclude[slot] === num) {
         cond.exclude[slot] = null;
+        if (cond.exclude.filter(x => x !== null).length <= 1) {
+          cond.bypassExcludeLimit = false;
+        }
+        SOUND_FX.play('clear');
       } else {
         if (cond.axis[slot] === null) {
           cond.axis[slot] = num;
+          SOUND_FX.play('axis');
         } else if (cond.exclude[slot] === null) {
           cond.exclude[slot] = num;
+          SOUND_FX.play('exclude');
         } else {
+          SOUND_FX.play('limit');
           showToast(`第${slot + 1}枠は軸(1)・除外(1)ともに上限です`);
           return;
         }
       }
       renderConditionPad();
       updateConditionSummaryPill();
+    }
+
+    function applyPresetExcludeLastDraw() {
+      const type = APP_STATE.currentType;
+      const stats = analyzeCumulativeStats(type, APP_STATE.selectedRound);
+      if (!stats.lastDraw) {
+        SOUND_FX.play('limit');
+        showToast('参照できる前回抽選データがありません');
+        return;
+      }
+
+      const lastNums = (type === 'numbers3' && APP_STATE.n3MiniMode)
+        ? [stats.lastDraw.main[1], stats.lastDraw.main[2]]
+        : stats.lastDraw.main;
+      const cond = APP_STATE.conditions[type];
+
+      if (type === 'bingo5') {
+        const nextExcl = Array(8).fill(null);
+        for (let slot = 0; slot < 8; slot++) {
+          const v = lastNums[slot];
+          if (cond.axis[slot] === v) {
+            cond.axis[slot] = null;
+          }
+          nextExcl[slot] = v;
+        }
+        cond.exclude = nextExcl;
+        cond.bypassExcludeLimit = true;
+      } else {
+        const uniqueLast = Array.from(new Set(lastNums));
+        cond.axis = cond.axis.filter(n => !uniqueLast.includes(n));
+        cond.exclude = uniqueLast;
+        cond.bypassExcludeLimit = true;
+      }
+
+      APP_STATE.isCustomMode = true;
+      APP_STATE.customSeedOffset += 1;
+      SOUND_FX.play('predict');
+      renderAll();
+
+      const dispNums = lastNums.map(n => (type === 'numbers3' || type === 'numbers4') ? String(n) : String(n).padStart(2, '0')).join('・');
+      showToast(`🚫 前回当選（${dispNums}）を完全除外し即再抽選しました`);
+    }
+
+    function applyPresetTopDroughtAxis() {
+      const type = APP_STATE.currentType;
+      const cfg = LOTTERY_CONFIG[type];
+      const stats = analyzeCumulativeStats(type, APP_STATE.selectedRound);
+      const cond = APP_STATE.conditions[type];
+
+      if (type === 'bingo5') {
+        const slotBest = [];
+        for (let slot = 0; slot < 8; slot++) {
+          const minV = slot * 5 + 1;
+          let bestN = null;
+          let maxD = -1;
+          for (let n = minV; n < minV + 5; n++) {
+            if (cond.exclude[slot] === n) continue;
+            const d = stats.currentDrought[n] || 0;
+            if (d > maxD) {
+              maxD = d;
+              bestN = n;
+            }
+          }
+          if (bestN !== null) {
+            slotBest.push({ slot, n: bestN, drought: maxD });
+          }
+        }
+        slotBest.sort((a, b) => b.drought - a.drought);
+        const top3Slots = slotBest.slice(0, 3);
+
+        if (top3Slots.length === 0) {
+          SOUND_FX.play('limit');
+          showToast('各枠の候補が不足しているため軸を設定できません');
+          return;
+        }
+
+        cond.axis = Array(8).fill(null);
+        top3Slots.forEach(item => {
+          cond.axis[item.slot] = item.n;
+          if (cond.exclude[item.slot] === item.n) {
+            cond.exclude[item.slot] = null;
+          }
+        });
+
+        APP_STATE.isCustomMode = true;
+        APP_STATE.customSeedOffset += 1;
+        SOUND_FX.play('predict');
+        renderAll();
+        const summary = top3Slots.map(s => `第${s.slot + 1}枠:${String(s.n).padStart(2, '0')}`).join(' / ');
+        showToast(`🎯 最も未出現の上位${top3Slots.length}枠（${summary}）を軸固定し即再抽選しました`);
+      } else {
+        const excludeSet = new Set(cond.exclude);
+        const list = [];
+        for (let n = cfg.min; n <= cfg.max; n++) {
+          if (excludeSet.has(n)) continue;
+          list.push({ n, d: stats.currentDrought[n] || 0, r: stats.reboundRatio[n] || 0 });
+        }
+        list.sort((a, b) => b.d - a.d || b.r - a.r);
+
+        const minNeededPool = cfg.allowDuplicates ? 1 : cfg.pick;
+        if (list.length < minNeededPool) {
+          SOUND_FX.play('limit');
+          showToast(`除外数が多すぎて残余候補（${list.length}個）が不足しています。条件を一部解除してください`);
+          return;
+        }
+
+        const picked = list.slice(0, Math.min(cfg.maxAxis, list.length)).map(x => x.n);
+        cond.axis = picked;
+
+        APP_STATE.isCustomMode = true;
+        APP_STATE.customSeedOffset += 1;
+        SOUND_FX.play('predict');
+        renderAll();
+        const isDigits = (type === 'numbers3' || type === 'numbers4');
+        const disp = picked.map(n => isDigits ? String(n) : String(n).padStart(2, '0')).join('・');
+        showToast(`🎯 長期未出現TOP『${disp}』を軸固定し即再抽選しました`);
+      }
     }
 
     function updateConditionSummaryPill() {
@@ -2641,11 +3572,13 @@
       if (type === 'bingo5') {
         const aCnt = cond.axis.filter(x => x !== null).length;
         const eCnt = cond.exclude.filter(x => x !== null).length;
-        pill.textContent = (aCnt + eCnt > 0) ? `軸${aCnt}・除${eCnt} ${arrow}` : `設定なし ${arrow}`;
+        const suffix = cond.bypassExcludeLimit ? '(全外し)' : '';
+        pill.textContent = (aCnt + eCnt > 0) ? `軸${aCnt}・除${eCnt}${suffix} ${arrow}` : `設定なし ${arrow}`;
       } else {
         const aCnt = cond.axis.length;
         const eCnt = cond.exclude.length;
-        pill.textContent = (aCnt + eCnt > 0) ? `軸${aCnt}・除${eCnt} ${arrow}` : `設定なし ${arrow}`;
+        const suffix = cond.bypassExcludeLimit ? '(全外し)' : '';
+        pill.textContent = (aCnt + eCnt > 0) ? `軸${aCnt}・除${eCnt}${suffix} ${arrow}` : `設定なし ${arrow}`;
       }
     }
 
@@ -2703,6 +3636,7 @@
 
       body.querySelectorAll('.verify-jump-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+          SOUND_FX.play('step');
           APP_STATE.selectedRound = Number(btn.dataset.jumpRound);
           closeModal('historyModal');
           renderAll();
@@ -2713,12 +3647,12 @@
       document.getElementById('historyModal').classList.add('open');
     }
 
-    /* ================= TICKET LEDGER (BACKUP + BET-TYPE AWARE MATCHING) ================= */
-    function saveTicketToLedger(rec, betType) {
+    /* ================= TICKET LEDGER (SUMMARY + FILTER + MANUAL ENTRY + BACKUP) ================= */
+    function saveTicketToLedger(rec, betType, silent = false) {
       const type = APP_STATE.currentType;
       const cfg = LOTTERY_CONFIG[type];
       const ticket = {
-        id: Date.now() + '_' + Math.floor(Math.random() * 1000),
+        id: Date.now() + '_' + Math.floor(Math.random() * 100000),
         type,
         typeName: cfg.name,
         round: APP_STATE.selectedRound,
@@ -2730,8 +3664,10 @@
       APP_STATE.tickets.unshift(ticket);
       persistTickets();
       updateLedgerBadge();
-      const betLabel = ticket.betType ? `【${ticket.betType}】` : '';
-      showToast(`📒 ${cfg.name} 第${ticket.round}回（${rec.rank}）${betLabel}を購入台帳に記録しました`);
+      if (!silent) {
+        const betLabel = ticket.betType ? `【${ticket.betType}】` : '';
+        showToast(`📒 ${cfg.name} 第${ticket.round}回（${rec.rank}）${betLabel}を購入台帳に記録しました`);
+      }
     }
 
     function persistTickets() {
@@ -2746,6 +3682,7 @@
 
     function exportBackupCode() {
       if (APP_STATE.tickets.length === 0) {
+        SOUND_FX.play('limit');
         showToast('バックアップする購入記録がまだありません');
         return;
       }
@@ -2754,12 +3691,14 @@
         const encoded = 'LOTTO_BK_' + btoa(unescape(encodeURIComponent(jsonStr)));
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(encoded).then(() => {
+            SOUND_FX.play('coin');
             showToast('📋 バックアップコードをコピーしました（LINEメモ等に保存可）');
           }).catch(() => fallbackCopyText(encoded));
         } else {
           fallbackCopyText(encoded);
         }
       } catch (e) {
+        SOUND_FX.play('limit');
         showToast('バックアップ作成に失敗しました');
       }
     }
@@ -2771,12 +3710,14 @@
       ta.select();
       document.execCommand('copy');
       document.body.removeChild(ta);
+      SOUND_FX.play('coin');
       showToast('📋 バックアップコードをコピーしました');
     }
 
     function importBackupCode(rawCode) {
       const trimmed = (rawCode || '').trim();
       if (!trimmed.startsWith('LOTTO_BK_')) {
+        SOUND_FX.play('limit');
         showToast('正しいバックアップコード（LOTTO_BK_...）を貼り付けてください');
         return;
       }
@@ -2796,9 +3737,11 @@
         });
         persistTickets();
         updateLedgerBadge();
+        SOUND_FX.play('coin');
         openLedgerModal();
         showToast(`📥 ${restoredCount}件の購入記録を復元・最新結果と再照合しました`);
       } catch (e) {
+        SOUND_FX.play('limit');
         showToast('バックアップコードの復元に失敗しました');
       }
     }
@@ -2812,15 +3755,22 @@
 
       const type = ticket.type;
       if (type === 'numbers3' || type === 'numbers4') {
+        const isMiniTicket = (type === 'numbers3' && (ticket.betType === 'ミニ' || ticket.numbers[0] === null));
+        const isMini = type === 'numbers3' && ticket.numbers[1] === official.main[1] && ticket.numbers[2] === official.main[2];
+
+        if (isMiniTicket) {
+          if (isMini) return { status: 'win', label: '🎉 ミニ当選（下2桁一致）！', official };
+          return { status: 'lose', label: '落選（下2桁不一致）', official };
+        }
+
         let straightHits = 0;
         ticket.numbers.forEach((n, idx) => {
-          if (official.main[idx] === n) straightHits++;
+          if (n !== null && official.main[idx] === n) straightHits++;
         });
         const isStraight = straightHits === ticket.numbers.length;
         const sortedUser = [...ticket.numbers].sort().join(',');
         const sortedOff = [...official.main].sort().join(',');
         const isBox = sortedUser === sortedOff;
-        const isMini = type === 'numbers3' && ticket.numbers[1] === official.main[1] && ticket.numbers[2] === official.main[2];
 
         const bt = ticket.betType;
 
@@ -2843,12 +3793,6 @@
           return { status: 'lose', label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（不一致）', official };
         }
 
-        if (bt === 'ミニ') {
-          if (isMini) return { status: 'win', label: '🎉 ミニ当選（下2桁一致）！', official };
-          return { status: 'lose', label: '落選（下2桁不一致）', official };
-        }
-
-        // 旧記録（買い方未指定データ）との後方互換
         if (isStraight) return { status: 'win', label: '🎉 ストレート当選！', official };
         if (isBox) return { status: 'win', label: '🎉 ボックス当選！', official };
         if (isMini) return { status: 'win', label: '🎉 ミニ当選（下2桁）！', official };
@@ -2922,6 +3866,88 @@
     function openLedgerModal() {
       const body = document.getElementById('ledgerModalBody');
 
+      let winCount = 0;
+      let judgedCount = 0;
+      APP_STATE.tickets.forEach(t => {
+        const res = evaluateTicketMatch(t);
+        if (res.status === 'win') {
+          winCount++;
+          judgedCount++;
+        } else if (res.status === 'lose') {
+          judgedCount++;
+        }
+      });
+      const winRateStr = judgedCount > 0 ? `${Math.round((winCount / judgedCount) * 100)}%` : '-';
+
+      const statsDashboardHtml = `
+        <div class="ledger-stats-grid">
+          <div class="ledger-stat-card">
+            <div class="ledger-stat-val">${APP_STATE.tickets.length}口</div>
+            <div class="ledger-stat-lbl">累計記録数</div>
+          </div>
+          <div class="ledger-stat-card">
+            <div class="ledger-stat-val" style="color:#FF8585;">${winCount}本</div>
+            <div class="ledger-stat-lbl">当選本数</div>
+          </div>
+          <div class="ledger-stat-card">
+            <div class="ledger-stat-val">${winRateStr}</div>
+            <div class="ledger-stat-lbl">確定分当選率</div>
+          </div>
+        </div>
+      `;
+
+      const curType = APP_STATE.currentType;
+      const curRound = APP_STATE.targetRounds[curType];
+      const manualEntryHtml = `
+        <div class="manual-entry-panel">
+          <button type="button" class="manual-toggle-btn" id="btnToggleManualForm">✍️ マイ買い目（自己選択数字）を手入力追加</button>
+          <div class="manual-form-body" id="manualFormBody">
+            <div class="manual-form-grid">
+              <select class="manual-input" id="manualTypeSelect">
+                <option value="numbers3" ${curType==='numbers3'?'selected':''}>ナンバーズ3</option>
+                <option value="numbers4" ${curType==='numbers4'?'selected':''}>ナンバーズ4</option>
+                <option value="miniloto" ${curType==='miniloto'?'selected':''}>ミニロト</option>
+                <option value="loto6" ${curType==='loto6'?'selected':''}>ロト6</option>
+                <option value="loto7" ${curType==='loto7'?'selected':''}>ロト7</option>
+                <option value="bingo5" ${curType==='bingo5'?'selected':''}>ビンゴ5</option>
+              </select>
+              <input type="number" class="manual-input" id="manualRoundInput" value="${curRound}" placeholder="回号 (例: 2150)">
+            </div>
+            <div class="manual-form-grid" id="manualBetRow">
+              <select class="manual-input" id="manualBetSelect">
+                <option value="ボックス">ボックス</option>
+                <option value="ストレート">ストレート</option>
+                <option value="セット">セット</option>
+                <option value="ミニ">ミニ (N3のみ・下2桁可)</option>
+              </select>
+              <div style="font-size:10px; color:var(--ink-muted); display:flex; align-items:center;">※ロト系は買い方自動省略</div>
+            </div>
+            <input type="text" class="manual-input" id="manualNumsInput" style="margin-bottom:7px;" placeholder="数字をスペースやカンマ区切りで入力 (例: 3 12 19 25 33 41)">
+            <button type="button" class="restore-exec-btn" id="btnSubmitManualTicket">＋ この買い目を台帳へ保存</button>
+          </div>
+        </div>
+      `;
+
+      const filterRowHtml = `
+        <div class="ledger-filter-row">
+          <select class="ledger-filter-select" id="filterTypeSelect">
+            <option value="ALL" ${APP_STATE.ledgerFilterType==='ALL'?'selected':''}>すべての宝くじ</option>
+            <option value="numbers3" ${APP_STATE.ledgerFilterType==='numbers3'?'selected':''}>ナンバーズ3</option>
+            <option value="numbers4" ${APP_STATE.ledgerFilterType==='numbers4'?'selected':''}>ナンバーズ4</option>
+            <option value="miniloto" ${APP_STATE.ledgerFilterType==='miniloto'?'selected':''}>ミニロト</option>
+            <option value="loto6" ${APP_STATE.ledgerFilterType==='loto6'?'selected':''}>ロト6</option>
+            <option value="loto7" ${APP_STATE.ledgerFilterType==='loto7'?'selected':''}>ロト7</option>
+            <option value="bingo5" ${APP_STATE.ledgerFilterType==='bingo5'?'selected':''}>ビンゴ5</option>
+          </select>
+          <select class="ledger-filter-select" id="filterStatusSelect">
+            <option value="ALL" ${APP_STATE.ledgerFilterStatus==='ALL'?'selected':''}>すべての結果</option>
+            <option value="win" ${APP_STATE.ledgerFilterStatus==='win'?'selected':''}>🎉 当選のみ</option>
+            <option value="pending" ${APP_STATE.ledgerFilterStatus==='pending'?'selected':''}>⏳ 抽選待ち</option>
+            <option value="lose" ${APP_STATE.ledgerFilterStatus==='lose'?'selected':''}>落選のみ</option>
+          </select>
+        </div>
+      `;
+
       const backupSectionHtml = `
         <div class="backup-panel">
           <div class="backup-title">💾 端末容量ゼロ・クリップボード式データ保全</div>
@@ -2936,117 +3962,129 @@
         </div>
       `;
 
+      const filteredTickets = APP_STATE.tickets.filter(t => {
+        if (APP_STATE.ledgerFilterType !== 'ALL' && t.type !== APP_STATE.ledgerFilterType) return false;
+        if (APP_STATE.ledgerFilterStatus !== 'ALL') {
+          const st = evaluateTicketMatch(t).status;
+          if (st !== APP_STATE.ledgerFilterStatus) return false;
+        }
+        return true;
+      });
+
+      let ticketsListHtml = '';
       if (APP_STATE.tickets.length === 0) {
-        body.innerHTML = backupSectionHtml + `<div style="text-align:center; padding:24px 12px; color:var(--ink-muted); font-size:13px;">まだ購入台帳に記録された買い目はありません。<br>予測カードの「＋ 購入台帳に記録」から保存できます。</div>`;
-        bindLedgerModalEvents();
-        document.getElementById('ledgerModal').classList.add('open');
-        return;
-      }
+        ticketsListHtml = `<div style="text-align:center; padding:20px 12px; color:var(--ink-muted); font-size:12.5px;">まだ購入台帳に記録された買い目はありません。<br>予測カードの「＋ 購入台帳に記録」または上の手入力から保存できます。</div>`;
+      } else if (filteredTickets.length === 0) {
+        ticketsListHtml = `<div style="text-align:center; padding:20px 12px; color:var(--ink-muted); font-size:12.5px;">選択中のフィルター条件に一致する記録はありません。</div>`;
+      } else {
+        ticketsListHtml = filteredTickets.map(ticket => {
+          const evalRes = evaluateTicketMatch(ticket);
+          const off = evalRes.official;
+          const type = ticket.type;
 
-      const ticketsHtml = APP_STATE.tickets.map(ticket => {
-        const evalRes = evaluateTicketMatch(ticket);
-        const off = evalRes.official;
-        const type = ticket.type;
+          let userVisualHtml = '';
+          let officialRefHtml = '';
 
-        let userVisualHtml = '';
-        let officialRefHtml = '';
-
-        if (type === 'bingo5') {
-          const n = ticket.numbers;
-          const cells = [
-            { v: n[0], slot: 0 }, { v: n[1], slot: 1 }, { v: n[2], slot: 2 },
-            { v: n[3], slot: 3 }, { v: 'FREE', slot: -1 }, { v: n[4], slot: 4 },
-            { v: n[5], slot: 5 }, { v: n[6], slot: 6 }, { v: n[7], slot: 7 }
-          ];
-          userVisualHtml = `
-            <div style="margin:6px 0;">
-              <div class="bingo-mini-3x3">
-                ${cells.map(c => {
-                  if (c.v === 'FREE') return `<div class="bingo-mini-cell free">FREE</div>`;
-                  const isHit = off && off.main[c.slot] === c.v;
-                  return `<div class="bingo-mini-cell ${isHit ? 'hit-cell' : ''}">${String(c.v).padStart(2, '0')}</div>`;
-                }).join('')}
-              </div>
-            </div>
-          `;
-          if (off) {
-            const on = off.main;
-            const oCells = [on[0], on[1], on[2], on[3], 'FREE', on[4], on[5], on[6], on[7]];
-            officialRefHtml = `
-              <div class="ledger-official-ref">
-                <div style="margin-bottom:4px; font-weight:700;">公式当選（📅 ${off.date}）：</div>
+          if (type === 'bingo5') {
+            const n = ticket.numbers;
+            const cells = [
+              { v: n[0], slot: 0 }, { v: n[1], slot: 1 }, { v: n[2], slot: 2 },
+              { v: n[3], slot: 3 }, { v: 'FREE', slot: -1 }, { v: n[4], slot: 4 },
+              { v: n[5], slot: 5 }, { v: n[6], slot: 6 }, { v: n[7], slot: 7 }
+            ];
+            userVisualHtml = `
+              <div style="margin:6px 0;">
                 <div class="bingo-mini-3x3">
-                  ${oCells.map(v => v === 'FREE'
-                    ? `<div class="bingo-mini-cell free">FREE</div>`
-                    : `<div class="bingo-mini-cell">${String(v).padStart(2, '0')}</div>`
-                  ).join('')}
+                  ${cells.map(c => {
+                    if (c.v === 'FREE') return `<div class="bingo-mini-cell free">FREE</div>`;
+                    const isHit = off && off.main[c.slot] === c.v;
+                    return `<div class="bingo-mini-cell ${isHit ? 'hit-cell' : ''}">${String(c.v).padStart(2, '0')}</div>`;
+                  }).join('')}
                 </div>
               </div>
             `;
-          }
-        } else {
-          const coinsHtml = ticket.numbers.map((num, idx) => {
-            const disp = (type === 'numbers3' || type === 'numbers4') ? String(num) : String(num).padStart(2, '0');
-            let isMainHit = false;
-            let isBonusHit = false;
             if (off) {
-              if (type === 'numbers3' || type === 'numbers4') {
-                if (ticket.betType === 'ボックス' || ticket.betType === 'セット') {
-                  isMainHit = off.main.includes(num);
-                } else if (ticket.betType === 'ミニ' && type === 'numbers3') {
-                  isMainHit = (idx === 1 || idx === 2) && off.main[idx] === num;
+              const on = off.main;
+              const oCells = [on[0], on[1], on[2], on[3], 'FREE', on[4], on[5], on[6], on[7]];
+              officialRefHtml = `
+                <div class="ledger-official-ref">
+                  <div style="margin-bottom:4px; font-weight:700;">公式当選（📅 ${off.date}）：</div>
+                  <div class="bingo-mini-3x3">
+                    ${oCells.map(v => v === 'FREE'
+                      ? `<div class="bingo-mini-cell free">FREE</div>`
+                      : `<div class="bingo-mini-cell">${String(v).padStart(2, '0')}</div>`
+                    ).join('')}
+                  </div>
+                </div>
+              `;
+            }
+          } else {
+            const coinsHtml = ticket.numbers.map((num, idx) => {
+              if (num === null) {
+                return `<span class="ledger-coin is-wildcard">*</span>`;
+              }
+              const disp = (type === 'numbers3' || type === 'numbers4') ? String(num) : String(num).padStart(2, '0');
+              let isMainHit = false;
+              let isBonusHit = false;
+              if (off) {
+                if (type === 'numbers3' || type === 'numbers4') {
+                  if (ticket.betType === 'ボックス' || ticket.betType === 'セット') {
+                    isMainHit = off.main.includes(num);
+                  } else if (ticket.betType === 'ミニ' && type === 'numbers3') {
+                    isMainHit = (idx === 1 || idx === 2) && off.main[idx] === num;
+                  } else {
+                    isMainHit = off.main[idx] === num;
+                  }
                 } else {
-                  isMainHit = off.main[idx] === num;
-                }
-              } else {
-                isMainHit = off.main.includes(num);
-                if (!isMainHit && off.bonus && off.bonus.includes(num)) {
-                  isBonusHit = true;
+                  isMainHit = off.main.includes(num);
+                  if (!isMainHit && off.bonus && off.bonus.includes(num)) {
+                    isBonusHit = true;
+                  }
                 }
               }
+              const cls = ['ledger-coin', isMainHit ? 'hit-main' : '', isBonusHit ? 'hit-bonus' : ''].filter(Boolean).join(' ');
+              return `<span class="${cls}">${disp}</span>`;
+            }).join('');
+
+            userVisualHtml = `<div class="ledger-coins-row">${coinsHtml}</div>`;
+
+            if (off) {
+              const offMainStr = (type === 'numbers3' || type === 'numbers4')
+                ? off.main.join(' - ')
+                : off.main.map(v => String(v).padStart(2, '0')).join(' - ');
+              const offBonusStr = (off.bonus && off.bonus.length > 0)
+                ? `　B: (${off.bonus.map(b => String(b).padStart(2, '0')).join(', ')})`
+                : '';
+              officialRefHtml = `
+                <div class="ledger-official-ref">
+                  <strong>公式当選（📅 ${off.date}）：</strong>${offMainStr}${offBonusStr}
+                </div>
+              `;
             }
-            const cls = ['ledger-coin', isMainHit ? 'hit-main' : '', isBonusHit ? 'hit-bonus' : ''].filter(Boolean).join(' ');
-            return `<span class="${cls}">${disp}</span>`;
-          }).join('');
-
-          userVisualHtml = `<div class="ledger-coins-row">${coinsHtml}</div>`;
-
-          if (off) {
-            const offMainStr = (type === 'numbers3' || type === 'numbers4')
-              ? off.main.join(' - ')
-              : off.main.map(v => String(v).padStart(2, '0')).join(' - ');
-            const offBonusStr = (off.bonus && off.bonus.length > 0)
-              ? `　B: (${off.bonus.map(b => String(b).padStart(2, '0')).join(', ')})`
-              : '';
-            officialRefHtml = `
-              <div class="ledger-official-ref">
-                <strong>公式当選（📅 ${off.date}）：</strong>${offMainStr}${offBonusStr}
-              </div>
-            `;
           }
-        }
 
-        const betTagHtml = ticket.betType
-          ? `<span class="bet-mode-tag">${ticket.betType}</span>`
-          : '';
+          const betTagHtml = ticket.betType
+            ? `<span class="bet-mode-tag">${ticket.betType}</span>`
+            : '';
 
-        return `
-          <div class="ticket-item">
-            <div class="ticket-top">
-              <span class="ticket-title">${ticket.typeName} 第${ticket.round}回（${ticket.rank}）${betTagHtml}</span>
-              <span class="ticket-status-badge ${evalRes.status}">${evalRes.label}</span>
+          return `
+            <div class="ticket-item">
+              <div class="ticket-top">
+                <span class="ticket-title">${ticket.typeName} 第${ticket.round}回（${ticket.rank}）${betTagHtml}</span>
+                <span class="ticket-status-badge ${evalRes.status}">${evalRes.label}</span>
+              </div>
+              ${userVisualHtml}
+              ${officialRefHtml}
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                <span style="font-size:10.5px; color:var(--ink-muted);">記録日: ${ticket.savedAt}</span>
+                <button type="button" class="ticket-del-btn" data-del-id="${ticket.id}">削除</button>
+              </div>
             </div>
-            ${userVisualHtml}
-            ${officialRefHtml}
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-              <span style="font-size:10.5px; color:var(--ink-muted);">記録日: ${ticket.savedAt}</span>
-              <button type="button" class="ticket-del-btn" data-del-id="${ticket.id}">削除</button>
-            </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
 
-      body.innerHTML = backupSectionHtml + ticketsHtml;
+      body.innerHTML = statsDashboardHtml + manualEntryHtml + filterRowHtml + backupSectionHtml + ticketsListHtml;
       bindLedgerModalEvents();
       document.getElementById('ledgerModal').classList.add('open');
     }
@@ -3056,10 +4094,101 @@
       const btnExp = document.getElementById('btnExportBackup');
       const btnTog = document.getElementById('btnToggleRestore');
       const btnExec = document.getElementById('btnExecRestore');
+      const btnManualTog = document.getElementById('btnToggleManualForm');
+      const btnManualSub = document.getElementById('btnSubmitManualTicket');
+      const fType = document.getElementById('filterTypeSelect');
+      const fStatus = document.getElementById('filterStatusSelect');
+
+      if (btnManualTog) {
+        btnManualTog.addEventListener('click', () => {
+          SOUND_FX.play('modal');
+          document.getElementById('manualFormBody').classList.toggle('open');
+        });
+      }
+
+      if (btnManualSub) {
+        btnManualSub.addEventListener('click', () => {
+          const mType = document.getElementById('manualTypeSelect').value;
+          const mRound = Number(document.getElementById('manualRoundInput').value);
+          const mBet = document.getElementById('manualBetSelect').value;
+          const rawStr = document.getElementById('manualNumsInput').value.trim();
+          const cfg = LOTTERY_CONFIG[mType];
+
+          if (!mRound || mRound <= 0) {
+            SOUND_FX.play('limit');
+            showToast('有効な回号を入力してください');
+            return;
+          }
+
+          let parsedNums = [];
+          if ((mType === 'numbers3' || mType === 'numbers4') && /^\d+$/.test(rawStr)) {
+            parsedNums = rawStr.split('').map(Number);
+          } else {
+            parsedNums = rawStr.split(/[\s,、・\-]+/).filter(Boolean).map(Number);
+          }
+
+          // ナンバーズ3で「ミニ」選択時、2桁入力なら先頭にワイルドカード(null)を自動補完
+          if (mType === 'numbers3' && mBet === 'ミニ' && parsedNums.length === 2 && !parsedNums.some(n => isNaN(n) || n < 0 || n > 9)) {
+            parsedNums = [null, parsedNums[0], parsedNums[1]];
+          } else if (parsedNums.length !== cfg.pick || parsedNums.some(n => isNaN(n) || n < cfg.min || n > cfg.max)) {
+            SOUND_FX.play('limit');
+            showToast(`${cfg.name}は ${cfg.min}〜${cfg.max} の数字を ${cfg.pick}個 入力してください`);
+            return;
+          }
+
+          if (!cfg.allowDuplicates && new Set(parsedNums).size !== cfg.pick) {
+            SOUND_FX.play('limit');
+            showToast(`${cfg.name}は重複しない数字を${cfg.pick}個入力してください`);
+            return;
+          }
+
+          if (cfg.sorted) {
+            parsedNums.sort((a, b) => a - b);
+          }
+
+          const finalBet = (mType === 'numbers3' || mType === 'numbers4')
+            ? (mType === 'numbers4' && mBet === 'ミニ' ? 'ボックス' : mBet)
+            : null;
+
+          const ticket = {
+            id: Date.now() + '_' + Math.floor(Math.random() * 100000),
+            type: mType,
+            typeName: cfg.name,
+            round: mRound,
+            rank: '手入力マイ買い目',
+            betType: finalBet,
+            numbers: parsedNums,
+            savedAt: formatDateWithWeekday(new Date())
+          };
+          APP_STATE.tickets.unshift(ticket);
+          persistTickets();
+          updateLedgerBadge();
+          SOUND_FX.play('coin');
+          openLedgerModal();
+          showToast(`✍️ ${cfg.name} 第${mRound}回のマイ買い目を台帳に追加しました`);
+        });
+      }
+
+      if (fType) {
+        fType.addEventListener('change', () => {
+          SOUND_FX.play('step');
+          APP_STATE.ledgerFilterType = fType.value;
+          openLedgerModal();
+        });
+      }
+
+      if (fStatus) {
+        fStatus.addEventListener('change', () => {
+          SOUND_FX.play('step');
+          APP_STATE.ledgerFilterStatus = fStatus.value;
+          openLedgerModal();
+        });
+      }
 
       if (btnExp) btnExp.addEventListener('click', exportBackupCode);
       if (btnTog) {
         btnTog.addEventListener('click', () => {
+          SOUND_FX.play('modal');
           document.getElementById('restoreInputBox').classList.toggle('open');
         });
       }
@@ -3072,6 +4201,7 @@
 
       body.querySelectorAll('.ticket-del-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+          SOUND_FX.play('clear');
           const id = btn.dataset.delId;
           APP_STATE.tickets = APP_STATE.tickets.filter(t => t.id !== id);
           persistTickets();
@@ -3081,182 +4211,40 @@
       });
     }
 
-    /* ================= 14-DAY LUCKY CALENDAR MODAL (ASTRONOMICAL & TRADITIONAL ALMANAC) ================= */
-    function getJulianDayNumber(y, m, d) {
-      const a = Math.floor((14 - m) / 12);
-      const y2 = y + 4800 - a;
-      const m2 = m + 12 * a - 3;
-      return d + Math.floor((153 * m2 + 2) / 5) + 365 * y2 +
-        Math.floor(y2 / 4) - Math.floor(y2 / 100) + Math.floor(y2 / 400) - 32045;
-    }
-
-    function getMoonAge(dateObj) {
-      // 基準新月: 2000-01-06 18:14 UTC (JST 2000-01-07 03:14)
-      const baseNewMoonMs = Date.UTC(2000, 0, 6, 18, 14, 0);
-      const targetNoonJstMs = Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 3, 0, 0);
-      const synodicMonth = 29.530588853;
-      const diffDays = (targetNoonJstMs - baseNewMoonMs) / 86400000;
-      return ((diffDays % synodicMonth) + synodicMonth) % synodicMonth;
-    }
-
-    function getSolarTermMonthIndex(dateObj) {
-      // 節切り月 (0=寅月/立春〜, 1=卯月/啓蟄〜, ..., 11=丑月/小寒〜)
-      const y = dateObj.getFullYear();
-      const md = (dateObj.getMonth() + 1) * 100 + dateObj.getDate();
-      // 2024-2028年の主要二十四節気（節入り日）
-      const sets = [
-        { md: 105, idx: 11 }, // 小寒 (丑月)
-        { md: 204, idx: 0 },  // 立春 (寅月)
-        { md: 305, idx: 1 },  // 啓蟄 (卯月)
-        { md: 404, idx: 2 },  // 清明 (辰月)
-        { md: 505, idx: 3 },  // 立夏 (巳月)
-        { md: 605, idx: 4 },  // 芒種 (午月)
-        { md: 707, idx: 5 },  // 小暑 (未月)
-        { md: 807, idx: 6 },  // 立秋 (申月)
-        { md: 907, idx: 7 },  // 白露 (酉月)
-        { md: 1008, idx: 8 }, // 寒露 (戌月)
-        { md: 1107, idx: 9 }, // 立冬 (亥月)
-        { md: 1207, idx: 10 } // 大雪 (子月)
-      ];
-      let currentIdx = 10; // 前年大雪以降（子月）
-      for (const s of sets) {
-        if (md >= s.md) currentIdx = s.idx;
-      }
-      return currentIdx;
-    }
-
-    function computeJapaneseAlmanac(dateObj) {
-      const y = dateObj.getFullYear();
-      const m = dateObj.getMonth() + 1;
-      const d = dateObj.getDate();
-      const jdn = getJulianDayNumber(y, m, d);
-
-      // 1. 干支（十干: 0=甲..9=癸, 十二支: 0=子..11=亥）
-      // JDN 2451545 (2000-01-01) は 戊午 (十干=4, 十二支=6)
-      const stemIdx = ((jdn - 2451545 + 4) % 10 + 10) % 10;
-      const branchIdx = ((jdn - 2451545 + 6) % 12 + 12) % 12;
-
-      // 2. 節切り月 (0=寅..11=丑)
-      const setsuMonth = getSolarTermMonthIndex(dateObj);
-
-      // 3. 一粒万倍日（節切り月ごとの吉十二支）
-      const ichiryuTable = [
-        [1, 6],   // 寅月: 丑・午
-        [2, 9],   // 卯月: 寅・酉
-        [0, 3],   // 辰月: 子・卯
-        [3, 4],   // 巳月: 卯・辰
-        [4, 5],   // 午月: 辰・巳
-        [5, 6],   // 未月: 巳・午
-        [6, 7],   // 申月: 午・未
-        [7, 8],   // 酉月: 未・申
-        [8, 9],   // 戌月: 申・酉
-        [9, 10],  // 亥月: 酉・戌
-        [10, 11], // 子月: 戌・亥
-        [0, 11]   // 丑月: 子・亥
-      ];
-      const isIchiryu = ichiryuTable[setsuMonth].includes(branchIdx);
-
-      // 4. 天赦日（季節ごとの特定干支: 春=戊寅, 夏=甲午, 秋=戊申, 冬=甲子）
-      // 季節判定: 寅・卯・辰(0,1,2)=春, 巳・午・未(3,4,5)=夏, 申・酉・戌(6,7,8)=秋, 亥・子・丑(9,10,11)=冬
-      let isTensha = false;
-      if (setsuMonth <= 2 && stemIdx === 4 && branchIdx === 2) isTensha = true;       // 戊寅
-      else if (setsuMonth >= 3 && setsuMonth <= 5 && stemIdx === 0 && branchIdx === 6) isTensha = true; // 甲午
-      else if (setsuMonth >= 6 && setsuMonth <= 8 && stemIdx === 4 && branchIdx === 8) isTensha = true; // 戊申
-      else if (setsuMonth >= 9 && stemIdx === 0 && branchIdx === 0) isTensha = true; // 甲子
-
-      // 5. 寅の日 (branchIdx === 2) / 巳の日 (branchIdx === 5) / 己巳の日 (stemIdx === 5 && branchIdx === 5)
-      const isTora = branchIdx === 2;
-      const isTsuchinotoMi = (stemIdx === 5 && branchIdx === 5);
-      const isMi = (branchIdx === 5 && !isTsuchinotoMi);
-
-      // 6. 新月・満月（朔望月計算）
-      const moonAge = getMoonAge(dateObj);
-      let moonEvent = '';
-      if (moonAge < 1.0 || moonAge > 28.53) {
-        moonEvent = '🌑 新月';
-      } else if (Math.abs(moonAge - 14.765) < 0.75) {
-        moonEvent = '🌕 満月';
-      }
-
-      // 7. 旧暦近似による六曜（朔日基準 + 旧暦月）
-      const rokuyoNames = ['大安', '赤口', '先勝', '友引', '先負', '仏滅'];
-      const baseNewMoonMs = Date.UTC(2000, 0, 6, 18, 14, 0);
-      const targetNoonJstMs = Date.UTC(y, m - 1, d, 3, 0, 0);
-      const synodicMonth = 29.530588853;
-      const lunations = (targetNoonJstMs - baseNewMoonMs) / 86400000 / synodicMonth;
-      const lunarMonthApprox = (Math.floor(lunations) % 12 + 12) % 12;
-      const lunarDayApprox = Math.floor(moonAge) + 1;
-      const rokuyo = rokuyoNames[(lunarMonthApprox + lunarDayApprox) % 6];
-
-      // 8. その日の宝くじ抽選スケジュール
-      const dow = dateObj.getDay(); // 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
-      const draws = [];
-      if (dow >= 1 && dow <= 5) {
-        draws.push({ name: 'ナンバーズ3・4', isLoto: false });
-      }
-      if (dow === 1 || dow === 4) {
-        draws.push({ name: 'ロト6', isLoto: true });
-      }
-      if (dow === 2) {
-        draws.push({ name: 'ミニロト', isLoto: true });
-      }
-      if (dow === 3) {
-        draws.push({ name: 'ビンゴ5', isLoto: true });
-      }
-      if (dow === 5) {
-        draws.push({ name: 'ロト7', isLoto: true });
-      }
-
-      const luckyTags = [];
-      if (isTensha) luckyTags.push('天赦日');
-      if (isIchiryu) luckyTags.push('一粒万倍日');
-      if (isTsuchinotoMi) luckyTags.push('己巳の日');
-      if (isTora) luckyTags.push('寅の日');
-      if (isMi) luckyTags.push('巳の日');
-
-      return {
-        rokuyo,
-        luckyTags,
-        moonEvent,
-        draws
-      };
-    }
-
+    /* ================= 14-DAY LUCKY CALENDAR MODAL (COMPACT 2-ROW) ================= */
     function openCalendarModal() {
       const body = document.getElementById('calendarModalBody');
       const today = new Date();
-      let html = `
-        <div style="font-size:11px; color:var(--ink-muted); background:rgba(255,255,255,0.65); padding:6px 9px; border-radius:6px; border-left:3px solid var(--brass-mid); margin-bottom:9px; line-height:1.45;">
-          六曜（大安）・一粒万倍日・天赦日・寅の日・巳の日・新月／満月と、各曜日の宝くじ抽選日を一覧表示しています。
-        </div>
-        <div class="calendar-list">
-      `;
+      let html = '<div class="calendar-list">';
 
       for (let i = 0; i < 14; i++) {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
         const dateLabel = formatDateWithWeekday(d);
-        const info = computeJapaneseAlmanac(d);
+        const info = getAuspiciousInfoForDate(d);
 
-        const isSuper = info.rokuyo === '大安' || info.luckyTags.length > 0 || info.moonEvent !== '';
+        const isSuper = info.rokuyo === '大安' || info.tags.length > 0 || info.moonTags.length > 0;
 
         const drawsHtml = info.draws.length > 0
-          ? info.draws.map(dr => `<span class="draw-chip ${dr.isLoto ? 'loto' : ''}">${dr.name}</span>`).join('')
-          : `<span style="color:var(--ink-muted); font-size:10.5px;">抽選休み（土日）</span>`;
+          ? info.draws.map(dr => `<span class="draw-lotto-chip ${dr.major ? 'major' : ''}">${dr.name}</span>`).join('')
+          : `<span class="draw-none-text">抽選なし</span>`;
 
         html += `
           <div class="cal-row ${isSuper ? 'super-lucky' : ''}">
             <div class="cal-top-line">
               <span class="cal-date-str">${dateLabel}</span>
               <div class="cal-badges">
-                ${info.luckyTags.map(t => `<span class="auspicious-tag">✨ ${t}</span>`).join('')}
-                ${info.moonEvent ? `<span class="moon-tag">${info.moonEvent}</span>` : ''}
+                ${info.tags.map(t => `<span class="auspicious-tag">✨${t}</span>`).join('')}
+                ${info.moonTags.map(m => `<span class="moon-tag">${m}</span>`).join('')}
                 <span class="rokuyo-pill ${info.rokuyo === '大安' ? 'taian' : ''}">${info.rokuyo}</span>
               </div>
             </div>
-            <div class="cal-draws-line">
-              <span class="cal-draw-label">🎯 抽選日：</span>
-              ${drawsHtml}
+            <div class="cal-bottom-line">
+              <div class="cal-draws-group">
+                <span class="cal-draws-label">🎯抽選:</span>
+                ${drawsHtml}
+              </div>
+              <span class="cal-lunar-inline">${info.lunarStr}</span>
             </div>
           </div>
         `;
@@ -3275,12 +4263,43 @@
       el.textContent = msg;
       el.classList.add('show');
       clearTimeout(el._timer);
-      el._timer = setTimeout(() => el.classList.remove('show'), 2600);
+      el._timer = setTimeout(() => el.classList.remove('show'), 2800);
     }
 
     /* ================= EVENT LISTENERS ================= */
+    document.getElementById('toggleSoundBtn').addEventListener('click', () => {
+      APP_STATE.soundEnabled = !APP_STATE.soundEnabled;
+      try {
+        localStorage.setItem('lottery_pred_sound_v1', String(APP_STATE.soundEnabled));
+      } catch (e) {}
+      updateSoundButtonUI();
+      if (APP_STATE.soundEnabled) {
+        SOUND_FX.play('axis');
+        showToast('🔊 ボタン効果音をONにしました');
+      } else {
+        showToast('🔇 ボタン効果音をOFF（消音）にしました');
+      }
+    });
+
+    document.getElementById('btnN3Standard').addEventListener('click', () => {
+      if (!APP_STATE.n3MiniMode) return;
+      SOUND_FX.play('step');
+      APP_STATE.n3MiniMode = false;
+      renderAll();
+      showToast('🎲 ナンバーズ3：通常3桁予測モードへ切り替えました');
+    });
+
+    document.getElementById('btnN3Mini').addEventListener('click', () => {
+      if (APP_STATE.n3MiniMode) return;
+      SOUND_FX.play('axis');
+      APP_STATE.n3MiniMode = true;
+      renderAll();
+      showToast('🎯 ナンバーズ3：ミニ（下2桁特化）予測モードへ切り替えました');
+    });
+
     document.querySelectorAll('.lottery-tab').forEach(btn => {
       btn.addEventListener('click', () => {
+        SOUND_FX.play('tab');
         APP_STATE.currentType = btn.dataset.type;
         APP_STATE.selectedRound = APP_STATE.targetRounds[APP_STATE.currentType];
         APP_STATE.isCustomMode = false;
@@ -3291,6 +4310,7 @@
     });
 
     document.getElementById('prevRoundBtn').addEventListener('click', () => {
+      SOUND_FX.play('step');
       APP_STATE.selectedRound--;
       renderAll();
     });
@@ -3298,28 +4318,35 @@
     document.getElementById('nextRoundBtn').addEventListener('click', () => {
       const target = APP_STATE.targetRounds[APP_STATE.currentType];
       if (APP_STATE.selectedRound < target) {
+        SOUND_FX.play('step');
         APP_STATE.selectedRound++;
         renderAll();
       }
     });
 
     document.getElementById('latestRoundBtn').addEventListener('click', () => {
+      SOUND_FX.play('step');
       APP_STATE.selectedRound = APP_STATE.targetRounds[APP_STATE.currentType];
       renderAll();
       showToast(`最新購入対象（第${APP_STATE.selectedRound}回）へ戻りました`);
     });
 
     document.getElementById('toggleConditionBtn').addEventListener('click', () => {
+      SOUND_FX.play('modal');
       document.getElementById('conditionDrawer').classList.toggle('open');
       updateConditionSummaryPill();
     });
 
+    document.getElementById('btnPresetExcludeLast').addEventListener('click', applyPresetExcludeLastDraw);
+    document.getElementById('btnPresetDroughtAxis').addEventListener('click', applyPresetTopDroughtAxis);
+
     document.getElementById('clearConditionsBtn').addEventListener('click', () => {
+      SOUND_FX.play('clear');
       const type = APP_STATE.currentType;
       if (type === 'bingo5') {
-        APP_STATE.conditions.bingo5 = { axis: Array(8).fill(null), exclude: Array(8).fill(null) };
+        APP_STATE.conditions.bingo5 = { axis: Array(8).fill(null), exclude: Array(8).fill(null), bypassExcludeLimit: false };
       } else {
-        APP_STATE.conditions[type] = { axis: [], exclude: [] };
+        APP_STATE.conditions[type] = { axis: [], exclude: [], bypassExcludeLimit: false };
       }
       renderConditionPad();
       updateConditionSummaryPill();
@@ -3327,6 +4354,7 @@
     });
 
     document.getElementById('runPredictBtn').addEventListener('click', () => {
+      SOUND_FX.play('predict');
       APP_STATE.isCustomMode = true;
       APP_STATE.customSeedOffset += 1;
       renderAll();
@@ -3334,23 +4362,39 @@
     });
 
     document.getElementById('resetOfficialBtn').addEventListener('click', () => {
+      SOUND_FX.play('clear');
       APP_STATE.isCustomMode = false;
       APP_STATE.customSeedOffset = 0;
       renderAll();
       showToast('全期間累積統計の「公式本命」へ戻しました');
     });
 
-    document.getElementById('openHistoryBtn').addEventListener('click', openHistoryModal);
-    document.getElementById('openLedgerBtn').addEventListener('click', openLedgerModal);
-    document.getElementById('openCalendarBtn').addEventListener('click', openCalendarModal);
+    document.getElementById('openHistoryBtn').addEventListener('click', () => {
+      SOUND_FX.play('modal');
+      openHistoryModal();
+    });
+    document.getElementById('openLedgerBtn').addEventListener('click', () => {
+      SOUND_FX.play('modal');
+      openLedgerModal();
+    });
+    document.getElementById('openCalendarBtn').addEventListener('click', () => {
+      SOUND_FX.play('modal');
+      openCalendarModal();
+    });
 
     document.querySelectorAll('.modal-close-btn').forEach(btn => {
-      btn.addEventListener('click', () => closeModal(btn.dataset.close));
+      btn.addEventListener('click', () => {
+        SOUND_FX.play('clear');
+        closeModal(btn.dataset.close);
+      });
     });
 
     document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
       backdrop.addEventListener('click', (e) => {
-        if (e.target === backdrop) backdrop.classList.remove('open');
+        if (e.target === backdrop) {
+          SOUND_FX.play('clear');
+          backdrop.classList.remove('open');
+        }
       });
     });
 
