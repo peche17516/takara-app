@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>宝くじ予測アプリ</title>
+  <title>くじ日和｜データ＆開運 宝くじ予想帳</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho:wght@600;700;800&display=swap" rel="stylesheet">
@@ -96,13 +96,24 @@
       min-width: 0;
     }
 
+    .brand-sub-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--brass-bright);
+      letter-spacing: 0.04em;
+      margin-bottom: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .brand-title {
       margin: 0;
       font-family: 'Shippori Mincho', serif;
-      font-size: 18px;
+      font-size: 20.5px;
       font-weight: 800;
       color: #F7E7C4;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.06em;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65);
       white-space: nowrap;
     }
@@ -1738,7 +1749,8 @@
       <div class="brand-area">
         <div class="brand-emblem">宝</div>
         <div class="brand-text">
-          <h1 class="brand-title">宝くじ予測アプリ</h1>
+          <div class="brand-sub-tag">データ＆開運 宝くじ予想帳</div>
+          <h1 class="brand-title">くじ日和</h1>
           <div class="sync-status" id="syncStatusText">
             <span class="sync-dot local" id="syncDot"></span>
             <span id="syncLabel">全期間累積統計エンジン準備中...</span>
@@ -1901,7 +1913,7 @@
 
   <script>
     /**
-     * 宝くじ予測アプリ（ミニ専用予測モード・3口一括記録・専門家レビュー完全反映版）
+     * くじ日和（データ＆開運 宝くじ予想帳）
      */
     const LOTTERY_CONFIG = {
       numbers3: {
@@ -1986,6 +1998,37 @@
       ledgerFilterStatus: 'ALL',
       isCloudSynced: false
     };
+
+    const SESSION_STORAGE_KEY = 'kujibiyori_ui_state_v1';
+
+    function saveSessionState() {
+      try {
+        const isDrawerOpen = document.getElementById('conditionDrawer')?.classList.contains('open') || false;
+        const payload = {
+          currentType: APP_STATE.currentType,
+          n3MiniMode: APP_STATE.n3MiniMode,
+          selectedRound: APP_STATE.selectedRound,
+          targetRoundAtSave: APP_STATE.targetRounds[APP_STATE.currentType],
+          isCustomMode: APP_STATE.isCustomMode,
+          customSeedOffset: APP_STATE.customSeedOffset,
+          conditions: APP_STATE.conditions,
+          ledgerFilterType: APP_STATE.ledgerFilterType,
+          ledgerFilterStatus: APP_STATE.ledgerFilterStatus,
+          isDrawerOpen
+        };
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {}
+    }
+
+    function loadSessionState() {
+      try {
+        const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
 
     /* ================= CUTE WEB AUDIO SOUND ENGINE ================= */
     const SOUND_FX = {
@@ -2341,6 +2384,38 @@
 
       updateSoundButtonUI();
 
+      const savedSession = loadSessionState();
+      if (savedSession) {
+        if (savedSession.currentType && LOTTERY_CONFIG[savedSession.currentType]) {
+          APP_STATE.currentType = savedSession.currentType;
+        }
+        if (typeof savedSession.n3MiniMode === 'boolean') {
+          APP_STATE.n3MiniMode = savedSession.n3MiniMode;
+        }
+        if (typeof savedSession.isCustomMode === 'boolean') {
+          APP_STATE.isCustomMode = savedSession.isCustomMode;
+        }
+        if (typeof savedSession.customSeedOffset === 'number') {
+          APP_STATE.customSeedOffset = savedSession.customSeedOffset;
+        }
+        if (savedSession.conditions) {
+          Object.keys(LOTTERY_CONFIG).forEach(t => {
+            if (savedSession.conditions[t]) {
+              APP_STATE.conditions[t] = savedSession.conditions[t];
+            }
+          });
+        }
+        if (savedSession.ledgerFilterType) {
+          APP_STATE.ledgerFilterType = savedSession.ledgerFilterType;
+        }
+        if (savedSession.ledgerFilterStatus) {
+          APP_STATE.ledgerFilterStatus = savedSession.ledgerFilterStatus;
+        }
+        if (savedSession.isDrawerOpen) {
+          document.getElementById('conditionDrawer').classList.add('open');
+        }
+      }
+
       Object.keys(LOTTERY_CONFIG).forEach(type => {
         APP_STATE.historyData[type] = generateFallbackArchive(type);
         APP_STATE.targetRounds[type] = LOTTERY_CONFIG[type].baseRound;
@@ -2392,7 +2467,22 @@
         APP_STATE.isCloudSynced = false;
       }
 
-      APP_STATE.selectedRound = APP_STATE.targetRounds[APP_STATE.currentType];
+      const currentTarget = APP_STATE.targetRounds[APP_STATE.currentType];
+      const minAvail = APP_STATE.historyData[APP_STATE.currentType]?.[0]?.round ?? (currentTarget - 100);
+      if (savedSession && typeof savedSession.selectedRound === 'number') {
+        if (savedSession.selectedRound === savedSession.targetRoundAtSave) {
+          // 前回「最新予測対象」を見ていた場合は、最新回が進んでいれば自動で最新へ追従
+          APP_STATE.selectedRound = currentTarget;
+        } else if (savedSession.selectedRound >= minAvail && savedSession.selectedRound <= currentTarget) {
+          // 過去回検証中だった場合はその回号を復元
+          APP_STATE.selectedRound = savedSession.selectedRound;
+        } else {
+          APP_STATE.selectedRound = currentTarget;
+        }
+      } else {
+        APP_STATE.selectedRound = currentTarget;
+      }
+
       updateSyncStatusUI();
       updateLedgerBadge();
       renderAll();
@@ -2688,7 +2778,6 @@
             : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比・隣接連番（${consecCount}組）の偏りをリアルタイム補正した最適バランス盤面。`;
 
         } else if (isMiniSpecial) {
-          // ナンバーズ3「ミニ（下2桁）専用特化エンジン」：十の位(pos=1)・一の位(pos=2)のみに特化
           const axisList = isCustom ? [...cond.axis] : [];
           const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
           const expectedPosCount = stats.totalCount / 10;
@@ -2736,7 +2825,6 @@
               else ones = axisList[0];
             }
 
-            // 下2桁ゾロ目（約10%発生）を適度に考慮
             if (tens === ones && rng() > 0.14 && posPools[2].length > 1) {
               ones = posPools[2][(Math.floor(rng() * (posPools[2].length - 1)) + 1) % posPools[2].length].d;
             }
@@ -3006,7 +3094,6 @@
         btn.classList.toggle('active', btn.dataset.type === type);
       });
 
-      // ナンバーズ3専用「ミニ特化モード」バーの表示制御
       const n3Bar = document.getElementById('n3ModeBar');
       if (type === 'numbers3') {
         n3Bar.style.display = 'grid';
@@ -3075,6 +3162,7 @@
 
       const recs = generateThreeRecommendations(type, round, APP_STATE.isCustomMode, APP_STATE.customSeedOffset);
       renderPredictionCards(recs, pastDrawObj);
+      saveSessionState();
     }
 
     function renderPastDrawVisual(type, draw) {
@@ -3414,6 +3502,7 @@
 
       renderConditionPad();
       updateConditionSummaryPill();
+      saveSessionState();
     }
 
     function handleBingoPadTap(slot, num) {
@@ -3443,6 +3532,7 @@
       }
       renderConditionPad();
       updateConditionSummaryPill();
+      saveSessionState();
     }
 
     function applyPresetExcludeLastDraw() {
@@ -4127,7 +4217,6 @@
             parsedNums = rawStr.split(/[\s,、・\-]+/).filter(Boolean).map(Number);
           }
 
-          // ナンバーズ3で「ミニ」選択時、2桁入力なら先頭にワイルドカード(null)を自動補完
           if (mType === 'numbers3' && mBet === 'ミニ' && parsedNums.length === 2 && !parsedNums.some(n => isNaN(n) || n < 0 || n > 9)) {
             parsedNums = [null, parsedNums[0], parsedNums[1]];
           } else if (parsedNums.length !== cfg.pick || parsedNums.some(n => isNaN(n) || n < cfg.min || n > cfg.max)) {
@@ -4173,6 +4262,7 @@
         fType.addEventListener('change', () => {
           SOUND_FX.play('step');
           APP_STATE.ledgerFilterType = fType.value;
+          saveSessionState();
           openLedgerModal();
         });
       }
@@ -4181,6 +4271,7 @@
         fStatus.addEventListener('change', () => {
           SOUND_FX.play('step');
           APP_STATE.ledgerFilterStatus = fStatus.value;
+          saveSessionState();
           openLedgerModal();
         });
       }
@@ -4335,6 +4426,7 @@
       SOUND_FX.play('modal');
       document.getElementById('conditionDrawer').classList.toggle('open');
       updateConditionSummaryPill();
+      saveSessionState();
     });
 
     document.getElementById('btnPresetExcludeLast').addEventListener('click', applyPresetExcludeLastDraw);
@@ -4350,6 +4442,7 @@
       }
       renderConditionPad();
       updateConditionSummaryPill();
+      saveSessionState();
       showToast('指定条件をすべて解除しました');
     });
 
