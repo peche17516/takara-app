@@ -1819,7 +1819,7 @@
           <span>👑 キャリーオーバー発生中：</span>
           <span id="carryoverAmountText">0円</span>
         </div>
-        <span class="co-strategy-sub">⚡ 1等独り占め戦略：32以上の高数字帯を自動ブースト中</span>
+        <span class="co-strategy-sub">⚡ 第1・2推奨は王道確率重視 ／ 第3推奨は32以上の高数字帯を優遇中</span>
       </div>
 
       <!-- Past Official Draw Banner -->
@@ -2471,10 +2471,8 @@
       const minAvail = APP_STATE.historyData[APP_STATE.currentType]?.[0]?.round ?? (currentTarget - 100);
       if (savedSession && typeof savedSession.selectedRound === 'number') {
         if (savedSession.selectedRound === savedSession.targetRoundAtSave) {
-          // 前回「最新予測対象」を見ていた場合は、最新回が進んでいれば自動で最新へ追従
           APP_STATE.selectedRound = currentTarget;
         } else if (savedSession.selectedRound >= minAvail && savedSession.selectedRound <= currentTarget) {
-          // 過去回検証中だった場合はその回号を復元
           APP_STATE.selectedRound = savedSession.selectedRound;
         } else {
           APP_STATE.selectedRound = currentTarget;
@@ -2696,15 +2694,18 @@
         },
         {
           rank: '第3推奨',
-          title: isMiniSpecial ? '【ミニ特化】下2桁・最新トレンド黄金比' : '最新トレンド＆黄金比バランスモデル',
+          title: isMiniSpecial
+            ? '【ミニ特化】下2桁・最新トレンド黄金比'
+            : (hasCarryover ? '👑CO独り占め戦略・高数字帯シフトモデル' : '最新トレンド＆黄金比バランスモデル'),
           mode: 'harmony'
         }
       ];
 
       return models.map((model, mIdx) => {
+        const useCoBoost = hasCarryover && model.mode === 'harmony';
         const seedStr = isCustom
           ? `custom_${type}_${isMiniSpecial ? 'mini_' : ''}${round}_m${mIdx}_off${customOffset}_${JSON.stringify(cond)}`
-          : `official_${type}_${isMiniSpecial ? 'mini_' : ''}${round}_m${mIdx}_n${stats.totalCount}_co${hasCarryover ? 1 : 0}`;
+          : `official_${type}_${isMiniSpecial ? 'mini_' : ''}${round}_m${mIdx}_n${stats.totalCount}_co${useCoBoost ? 1 : 0}`;
         const rng = mulberry32(stringToSeed(seedStr));
 
         let numbers = [];
@@ -2963,6 +2964,7 @@
 
         } else {
           // Loto6, Loto7, MiniLoto
+          // 提案3：第1・第2推奨は王道の当選確率重視（ブーストなし）、第3推奨のみCO発生時に32以上優遇
           const axisList = isCustom ? [...cond.axis] : [];
           const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
 
@@ -2978,13 +2980,13 @@
             const isPull = stats.lastDraw && stats.lastDraw.main.includes(n) ? 1.30 : 1.0;
             const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - n) === 1) ? 1.18 : 1.0;
 
-            const coHighBoost = (hasCarryover && n >= 32) ? 1.32 : 1.0;
+            const coHighBoost = (useCoBoost && n >= 32) ? 1.26 : 1.0;
 
             let weight = 1.0;
             if (model.mode === 'hybrid') {
-              weight = convergenceGap * (1 + recCount * 0.25) * isPull * isSlide * coHighBoost;
+              weight = convergenceGap * (1 + recCount * 0.25) * isPull * isSlide;
             } else if (model.mode === 'rebound') {
-              weight = Math.pow(Math.max(0.5, rebScore), 1.45) * convergenceGap * coHighBoost;
+              weight = Math.pow(Math.max(0.5, rebScore), 1.45) * convergenceGap;
             } else {
               weight = (1 + recCount * 0.22) * isSlide * coHighBoost;
             }
@@ -2998,7 +3000,7 @@
           let bestSet = null;
           let bestPenalty = Infinity;
           const baseTargetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
-          const targetSum = hasCarryover ? baseTargetSum + 10 : baseTargetSum;
+          const targetSum = useCoBoost ? baseTargetSum + 8 : baseTargetSum;
 
           for (let attempt = 0; attempt < 70; attempt++) {
             const chosen = new Set(axisList);
@@ -3055,13 +3057,14 @@
           const pullMatches = stats.lastDraw
             ? numbers.filter(n => stats.lastDraw.main.includes(n)).length
             : 0;
-          const coNote = hasCarryover ? 'さらにキャリーオーバー中のため誕生日数字(1〜31)を避け32以上の高数字帯を優遇し1等独り占めを狙う' : '';
 
           rationale = model.mode === 'hybrid'
-            ? `全${stats.totalCount}回の長期出現率乖離に、直近の引っ張り（${pullMatches}個）・隣数字・連番（${consecCount}組）を融合。${coNote}進化本命構成。`
+            ? `【王道確率重視】全${stats.totalCount}回の長期出現率乖離に、直近の引っ張り（${pullMatches}個）・隣数字・連番（${consecCount}組）を純粋融合した進化本命構成。`
             : model.mode === 'rebound'
-            ? `全${stats.totalCount}回の蓄積履歴から実測「平均出現間隔」を超過した限界突破（リバウンド待機）数字を優先抽出。${coNote}反発狙い構成。`
-            : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りを補正。${coNote}最適バランス構成。`;
+            ? `【王道確率重視】全${stats.totalCount}回の蓄積履歴から実測「平均出現間隔」を超過した限界突破（リバウンド待機）数字を純粋抽出した反発狙い構成。`
+            : useCoBoost
+            ? `【1等独り占め戦略】キャリーオーバー発生中のため、誕生日数字(1〜31)を避け32以上の高数字帯を優遇して配当期待値を最大化したスペシャル構成。`
+            : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りをリアルタイム補正して導出した最適バランス構成。`;
         }
 
         const sumVal = numbers.reduce((a, b) => a + b, 0);
