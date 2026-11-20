@@ -2007,7 +2007,7 @@
   <script>
     /**
      * くじ日和（データ＆開運 宝くじ予想帳）
-     * ナンバーズ3・4専用（風車盤・桁別独立＆3口役割分離エンジン）＋ ミニロト専用（高密度リピート＆3口分散エンジン）搭載
+     * 6種全アルゴリズム完全最適化版（ビンゴ5重み付き探索＋全種別プロ仕様チューニング済）
      */
     const LOTTERY_CONFIG = {
       numbers3: {
@@ -2876,57 +2876,64 @@
         let rationale = '';
 
         if (type === 'bingo5') {
+          // 【修正③】ビンゴ5探索ループ最適化：weightedPick による確率的サンプリングを75回試行し、最適盤面を探索
+          const slotPools = [];
+          const expectedSlotCount = stats.totalCount / 5;
+
+          for (let slot = 0; slot < 8; slot++) {
+            const minV = slot * 5 + 1;
+            const maxV = minV + 4;
+            const fixedVal = isCustom ? cond.axis[slot] : null;
+            const exclVal = isCustom ? cond.exclude[slot] : null;
+
+            if (fixedVal !== null) {
+              slotPools.push([{ n: fixedVal, weight: 1.0 }]);
+              continue;
+            }
+
+            const candidates = [];
+            for (let n = minV; n <= maxV; n++) {
+              if (n === exclVal) continue;
+              const allCount = stats.freqAll[n] || 0;
+              const convergenceGap = Math.max(0.25, 1 + (expectedSlotCount - allCount) / Math.max(8, expectedSlotCount));
+              const recRate = (stats.freqRecent[n] || 0) / Math.max(1, stats.recentCount);
+              const rebScore = stats.reboundRatio[n] || 1.0;
+              const isPull = stats.lastDraw && stats.lastDraw.main[slot] === n ? 1.28 : 1.0;
+              const isSlide = stats.lastDraw && Math.abs(stats.lastDraw.main[slot] - n) === 1 ? 1.15 : 1.0;
+
+              let weight = 1.0;
+              if (model.mode === 'hybrid') {
+                weight = convergenceGap * (1 + recRate * 2.2) * isPull * isSlide;
+              } else if (model.mode === 'rebound') {
+                weight = Math.pow(Math.max(0.5, rebScore), 1.45);
+              } else {
+                weight = (1 + recRate * 2.5) * isSlide;
+              }
+              candidates.push({ n, weight });
+            }
+            if (candidates.length === 0) {
+              candidates.push({ n: minV, weight: 1.0 });
+            }
+            slotPools.push(candidates);
+          }
+
           let bestBoard = null;
           let bestScore = Infinity;
+          const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+          const targetConsec = model.mode === 'hybrid' ? 1 : 0;
 
-          for (let attempt = 0; attempt < 35; attempt++) {
+          for (let attempt = 0; attempt < 75; attempt++) {
             const temp = [];
             for (let slot = 0; slot < 8; slot++) {
-              const minV = slot * 5 + 1;
-              const maxV = minV + 4;
-              const fixedVal = isCustom ? cond.axis[slot] : null;
-              const exclVal = isCustom ? cond.exclude[slot] : null;
-
-              if (fixedVal !== null) {
-                temp.push(fixedVal);
-                continue;
-              }
-
-              const candidates = [];
-              const expectedSlotCount = stats.totalCount / 5;
-              for (let n = minV; n <= maxV; n++) {
-                if (n === exclVal) continue;
-                const allCount = stats.freqAll[n] || 0;
-                const convergenceGap = Math.max(0.25, 1 + (expectedSlotCount - allCount) / Math.max(8, expectedSlotCount));
-                const recRate = (stats.freqRecent[n] || 0) / Math.max(1, stats.recentCount);
-                const rebScore = stats.reboundRatio[n] || 1.0;
-                const isPull = stats.lastDraw && stats.lastDraw.main[slot] === n ? 1.28 : 1.0;
-                const isSlide = stats.lastDraw && Math.abs(stats.lastDraw.main[slot] - n) === 1 ? 1.15 : 1.0;
-
-                let weight = 1.0;
-                if (model.mode === 'hybrid') {
-                  weight = convergenceGap * (1 + recRate * 2.2) * isPull * isSlide;
-                } else if (model.mode === 'rebound') {
-                  weight = Math.pow(Math.max(0.5, rebScore), 1.45);
-                } else {
-                  weight = (1 + recRate * 2.5) * isSlide;
-                }
-                weight *= (0.72 + rng() * 0.56);
-                candidates.push({ n, weight });
-              }
-              if (candidates.length === 0) {
-                candidates.push({ n: minV, weight: 1.0 });
-              }
-              candidates.sort((a, b) => b.weight - a.weight);
-              temp.push(candidates[0].n);
+              temp.push(weightedPick(slotPools[slot], rng).n);
             }
 
             const sum = temp.reduce((a, b) => a + b, 0);
             const consec = countConsecutivePairs(temp, false);
-            const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+            const odds = temp.filter(x => x % 2 === 1).length;
             const sumDiff = Math.abs(sum - targetSum);
-            const targetConsec = model.mode === 'hybrid' ? 1 : 0;
-            const penalty = sumDiff + Math.abs(consec - targetConsec) * 6;
+            const oddDiff = Math.abs(odds - 4);
+            const penalty = sumDiff * 1.15 + Math.abs(consec - targetConsec) * 5.0 + oddDiff * 2.2;
 
             if (penalty < bestScore) {
               bestScore = penalty;
@@ -3028,7 +3035,7 @@
           };
 
         } else if (isNumbersGame) {
-          // ナンバーズ3・4専用：風車盤・桁別独立＆3口役割分離エンジン（全10数字重み付き確率抽出＋自然重複評価）
+          // ナンバーズ3・4専用：風車盤・桁別独立＆3口役割分離エンジン
           const axisList = isCustom ? [...cond.axis] : [];
           const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
           const expectedPosCount = stats.totalCount / 10;
@@ -3050,14 +3057,11 @@
 
               let w = 1.0;
               if (model.mode === 'straight_wheel') {
-                // 第1推奨：同桁の風車盤バイアス（前回同桁引っ張り・循環±1）と桁別長期収束を最重視
                 w = pGap * (1 + pRec * 0.28) * isSamePosPull * isSamePosWheelAdj;
               } else if (model.mode === 'box_harmony') {
-                // 第2推奨：全体出現頻度・直近30回トレンド重視（ボックス・セット網羅型）
                 const globalRec = stats.freqRecent[d] || 0;
                 w = (1 + globalRec * 0.14) * (1 + pRec * 0.22) * isSamePosWheelAdj;
               } else {
-                // 第3推奨：各桁の未出現スランプ限界突破（リバウンド穴狙い）
                 w = Math.pow(Math.max(0.45, pReb), 1.65) * pGap;
               }
               digitsArr.push({ d, weight: w });
@@ -3075,7 +3079,6 @@
           const expectedDupGap = 1 / Math.max(0.15, stats.allDupRate);
           const isDupOverdue = stats.drawsSinceLastDuplicate >= Math.floor(expectedDupGap) || stats.recentDupRate < stats.allDupRate * 0.85;
 
-          // 上書き破壊を廃止し、全10数字の重み付きルーレット試行から自然な重複と合計値バランスを評価選定
           for (let attempt = 0; attempt < 110; attempt++) {
             const temp = [];
             for (let pos = 0; pos < cfg.pick; pos++) {
@@ -3103,17 +3106,37 @@
             const odds = temp.filter(x => x % 2 === 1).length;
             const idealOdds = cfg.pick === 3 ? (attempt % 2 === 0 ? 2 : 1) : 2;
 
+            const digitFreq = {};
+            temp.forEach(d => { digitFreq[d] = (digitFreq[d] || 0) + 1; });
+            const maxSameDigit = Math.max(...Object.values(digitFreq));
+            const isSinglePairDouble = (type === 'numbers4' && dupCount === 1 && maxSameDigit === 2);
+
             let dupPenalty = 0;
             if (model.mode === 'box_harmony') {
-              // 第2推奨は実測重複周期（ダブル・トリプル）の到来度に合わせて自然に優遇
-              const wantDup = isDupOverdue || (type === 'numbers4');
-              if (wantDup && dupCount === 0) dupPenalty = 2.6;
-              if (dupCount >= 2 && type === 'numbers3') dupPenalty = 3.0;
+              if (type === 'numbers4') {
+                // 【改善】ナンバーズ4第2推奨：1ペア重複（ダブル）の基本ボーナス(-1.8pt)に加え、実測重複周期到来時は(-2.5pt)へ強化後押し
+                if (isSinglePairDouble) {
+                  dupPenalty = isDupOverdue ? -2.5 : -1.8;
+                } else if (dupCount === 0) {
+                  dupPenalty = isDupOverdue ? 2.8 : 0.8;
+                } else if (maxSameDigit >= 3) {
+                  dupPenalty = 3.2;
+                } else {
+                  dupPenalty = 1.4;
+                }
+              } else {
+                // 【改善】ナンバーズ3第2推奨：実測重複周期の到来時にダブル構成へ明確なボーナス(-1.5pt)を付与
+                if (dupCount === 1) {
+                  dupPenalty = isDupOverdue ? -1.5 : -0.3;
+                } else if (dupCount === 0) {
+                  dupPenalty = isDupOverdue ? 2.6 : 0.4;
+                } else {
+                  dupPenalty = 3.0;
+                }
+              }
             } else if (model.mode === 'straight_wheel') {
-              // 第1推奨は重複過多（トリプル等）のみ軽く抑制しつつ桁別スコアを尊重
               if (dupCount >= 2) dupPenalty = 2.5;
             } else {
-              // 第3推奨は穴狙い（シングル高配当または長期未出現重複）
               if (dupCount >= 2) dupPenalty = 2.0;
             }
 
@@ -3134,7 +3157,20 @@
           const consecCount = countConsecutivePairs(numbers, false);
           const uniqueLen = new Set(numbers).size;
           const dupCount = cfg.pick - uniqueLen;
-          const dupLabel = dupCount >= 2 ? 'トリプル・重複構成' : (dupCount === 1 ? 'ダブル（同数字重複）構成' : 'オールシングル構成');
+          const finalDigitFreq = {};
+          numbers.forEach(d => { finalDigitFreq[d] = (finalDigitFreq[d] || 0) + 1; });
+          const finalMaxSame = Math.max(...Object.values(finalDigitFreq));
+
+          let dupLabel = 'オールシングル構成';
+          if (finalMaxSame >= 4) {
+            dupLabel = '4カード・極限重複構成';
+          } else if (finalMaxSame === 3) {
+            dupLabel = 'トリプル・重複構成';
+          } else if (dupCount === 2 && finalMaxSame === 2) {
+            dupLabel = '2ペア（ダブル×2）構成';
+          } else if (dupCount === 1) {
+            dupLabel = '1ペア重複（ダブル）構成';
+          }
           const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』を最適桁へ配置し、` : '';
 
           rationale = model.mode === 'straight_wheel'
@@ -3146,6 +3182,8 @@
         } else {
           // Loto6, Loto7, MiniLoto
           const isMiniLoto = (type === 'miniloto');
+          const isLoto6 = (type === 'loto6');
+          const isLoto7 = (type === 'loto7');
           const axisList = isCustom ? [...cond.axis] : [];
           const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
 
@@ -3159,8 +3197,8 @@
             const convergenceGap = Math.max(0.25, 1 + (expectedCount - allCount) / Math.max(10, expectedCount));
             const rebScore = stats.reboundRatio[n] || 1.0;
 
-            const pullFactor = isMiniLoto ? 1.48 : 1.30;
-            const slideFactor = isMiniLoto ? 1.24 : 1.18;
+            const pullFactor = isMiniLoto ? 1.48 : (isLoto7 ? 1.42 : 1.30);
+            const slideFactor = isMiniLoto ? 1.24 : (isLoto7 ? 1.21 : 1.18);
             const isPull = stats.lastDraw && stats.lastDraw.main.includes(n) ? pullFactor : 1.0;
             const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - n) === 1) ? slideFactor : 1.0;
 
@@ -3197,12 +3235,16 @@
             }
 
             if (model.mode !== 'harmony' && chosen.size <= cfg.pick - 2) {
-              for (const item of shuffled) {
-                const nextN = item.n + 1;
-                if (nextN <= cfg.max && !excludeSet.has(nextN) && !chosen.has(item.n) && !chosen.has(nextN)) {
-                  chosen.add(item.n);
-                  chosen.add(nextN);
-                  break;
+              const pairRolls = (isLoto7 && (model.mode === 'hybrid' || (model.mode === 'rebound' && attempt % 2 === 0))) ? 2 : 1;
+              for (let pr = 0; pr < pairRolls; pr++) {
+                if (chosen.size > cfg.pick - 2) break;
+                for (const item of shuffled) {
+                  const nextN = item.n + 1;
+                  if (nextN <= cfg.max && !excludeSet.has(nextN) && !chosen.has(item.n) && !chosen.has(nextN)) {
+                    chosen.add(item.n);
+                    chosen.add(nextN);
+                    break;
+                  }
                 }
               }
             }
@@ -3225,10 +3267,21 @@
             const idealOdds = Math.round(cfg.pick / 2);
             const consec = countConsecutivePairs(arr, true);
 
-            const sumPenalty = Math.abs(sum - targetSum) / Math.max(8, targetSum * 0.18);
+            // 【改善】ロト6の第2推奨（リバウンド）で極端に古い数字ばかり集まりサム値が偏る現象を厳しく抑制（1.4倍重み）
+            const sumScale = (isLoto6 && model.mode === 'rebound') ? 1.4 : 1.0;
+            const sumPenalty = (Math.abs(sum - targetSum) / Math.max(8, targetSum * 0.18)) * sumScale;
             const oddPenalty = Math.abs(odds - idealOdds) * 0.9;
-            const targetConsec = model.mode === 'hybrid' ? 1 : (model.mode === 'rebound' ? 1 : 0);
-            const consecPenalty = Math.abs(consec - targetConsec) * 1.1;
+
+            // 【改善】ロト7の第2推奨（リバウンド）では連番1〜2組をペナルティ0で柔軟許容
+            let consecPenalty = 0;
+            if (isLoto7 && model.mode === 'rebound') {
+              consecPenalty = (consec === 1 || consec === 2) ? 0 : Math.abs(consec - 1.5) * 1.1;
+            } else {
+              const targetConsec = model.mode === 'hybrid'
+                ? (isLoto7 ? 2 : 1)
+                : (model.mode === 'rebound' ? 1 : 0);
+              consecPenalty = Math.abs(consec - targetConsec) * 1.1;
+            }
 
             let overlapPenalty = 0;
             if (isMiniLoto && mIdx > 0) {
