@@ -2007,6 +2007,7 @@
   <script>
     /**
      * くじ日和（データ＆開運 宝くじ予想帳）
+     * ナンバーズ3・4専用（風車盤・桁別独立＆3口役割分離エンジン）＋ ミニロト専用（高密度リピート＆3口分散エンジン）搭載
      */
     const LOTTERY_CONFIG = {
       numbers3: {
@@ -2200,14 +2201,13 @@
             this.playTone(520, 'sine', 0.09, 0, 0.07, 720);
             break;
           case 'fanfare':
-            // 華やかな祝福ファンファーレ（タ・タ・タ・ターン♪）
-            this.playTone(523.25, 'triangle', 0.13, 0.00, 0.09); // C5
-            this.playTone(659.25, 'triangle', 0.13, 0.12, 0.09); // E5
-            this.playTone(783.99, 'triangle', 0.13, 0.24, 0.10); // G5
-            this.playTone(1046.50, 'triangle', 0.55, 0.36, 0.12); // C6
-            this.playTone(523.25, 'sine', 0.55, 0.36, 0.08); // C5 和音
-            this.playTone(659.25, 'sine', 0.55, 0.36, 0.08); // E5 和音
-            this.playTone(783.99, 'sine', 0.55, 0.36, 0.08); // G5 和音
+            this.playTone(523.25, 'triangle', 0.13, 0.00, 0.09);
+            this.playTone(659.25, 'triangle', 0.13, 0.12, 0.09);
+            this.playTone(783.99, 'triangle', 0.13, 0.24, 0.10);
+            this.playTone(1046.50, 'triangle', 0.55, 0.36, 0.12);
+            this.playTone(523.25, 'sine', 0.55, 0.36, 0.08);
+            this.playTone(659.25, 'sine', 0.55, 0.36, 0.08);
+            this.playTone(783.99, 'sine', 0.55, 0.36, 0.08);
             break;
         }
       }
@@ -2232,6 +2232,20 @@
         h = Math.imul(h, 16777619);
       }
       return h >>> 0;
+    }
+
+    function weightedPick(items, rng) {
+      if (!items || items.length === 0) return null;
+      let totalW = 0;
+      for (let i = 0; i < items.length; i++) {
+        totalW += Math.max(0.0001, items[i].weight || items[i].score || 1);
+      }
+      let r = rng() * totalW;
+      for (let i = 0; i < items.length; i++) {
+        r -= Math.max(0.0001, items[i].weight || items[i].score || 1);
+        if (r <= 0) return items[i];
+      }
+      return items[items.length - 1];
     }
 
     /* ================= DATE & WEEKDAY HELPERS ================= */
@@ -2631,6 +2645,11 @@
       return pairs;
     }
 
+    function isCircularWheelAdjacent(a, b) {
+      const diff = Math.abs(a - b);
+      return diff === 1 || diff === 9;
+    }
+
     function analyzeCumulativeStats(type, beforeRound) {
       const allHistory = APP_STATE.historyData[type] || [];
       const pastDraws = allHistory.filter(d => d.round < beforeRound);
@@ -2774,6 +2793,7 @@
       const stats = analyzeCumulativeStats(type, round);
       const cond = APP_STATE.conditions[type];
       const isMiniSpecial = (type === 'numbers3' && APP_STATE.n3MiniMode);
+      const isNumbersGame = (type === 'numbers3' || type === 'numbers4') && !isMiniSpecial;
 
       const isTarget = round === APP_STATE.targetRounds[type];
       const history = APP_STATE.historyData[type] || [];
@@ -2784,25 +2804,66 @@
           : (pastDrawObj && pastDrawObj.carryover > 0)
       );
 
-      const models = [
-        {
-          rank: '第1推奨',
-          title: isMiniSpecial ? '【ミニ特化】下2桁・長期収束×短期融合' : '長期収束 × 短期モメンタム融合モデル',
-          mode: 'hybrid'
-        },
-        {
-          rank: '第2推奨',
-          title: isMiniSpecial ? '【ミニ特化】下2桁・未出現周期リバウンド' : '全期間未出現周期・リバウンドモデル',
-          mode: 'rebound'
-        },
-        {
-          rank: '第3推奨',
-          title: isMiniSpecial
-            ? '【ミニ特化】下2桁・最新トレンド黄金比'
-            : (hasCarryover ? '👑CO独り占め戦略・高数字帯シフトモデル' : '最新トレンド＆黄金比バランスモデル'),
-          mode: 'harmony'
-        }
-      ];
+      let models = [];
+      if (isNumbersGame) {
+        models = [
+          {
+            rank: '第1推奨',
+            title: '【ストレート本命】風車盤・桁別バイアス融合',
+            mode: 'straight_wheel'
+          },
+          {
+            rank: '第2推奨',
+            title: '【ボックス・セット網羅】実測重複＆黄金比構成',
+            mode: 'box_harmony'
+          },
+          {
+            rank: '第3推奨',
+            title: '【リバウンド穴狙い】桁別未出現限界突破モデル',
+            mode: 'rebound_sniper'
+          }
+        ];
+      } else if (type === 'miniloto') {
+        models = [
+          {
+            rank: '第1推奨',
+            title: '【31数字高密度】前回リピート×長期収束本命',
+            mode: 'hybrid'
+          },
+          {
+            rank: '第2推奨',
+            title: '【周期リバウンド】未出現限界×分散ポートフォリオ',
+            mode: 'rebound'
+          },
+          {
+            rank: '第3推奨',
+            title: '【トレンド黄金比】直近サム平均×網羅バランス',
+            mode: 'harmony'
+          }
+        ];
+      } else {
+        models = [
+          {
+            rank: '第1推奨',
+            title: isMiniSpecial ? '【ミニ特化】下2桁・風車バイアス×短期融合' : '長期収束 × 短期モメンタム融合モデル',
+            mode: 'hybrid'
+          },
+          {
+            rank: '第2推奨',
+            title: isMiniSpecial ? '【ミニ特化】下2桁・未出現周期リバウンド' : '全期間未出現周期・リバウンドモデル',
+            mode: 'rebound'
+          },
+          {
+            rank: '第3推奨',
+            title: isMiniSpecial
+              ? '【ミニ特化】下2桁・最新トレンド黄金比'
+              : (hasCarryover ? '👑CO独り占め戦略・高数字帯シフトモデル' : '最新トレンド＆黄金比バランスモデル'),
+            mode: 'harmony'
+          }
+        ];
+      }
+
+      const miniLotoChosenTracker = new Map();
 
       return models.map((model, mIdx) => {
         const useCoBoost = hasCarryover && model.mode === 'harmony';
@@ -2895,8 +2956,9 @@
               const pRec = stats.posFreqRecent[pos][d] || 0;
               const pGap = Math.max(0.25, 1 + (expectedPosCount - pAll) / Math.max(8, expectedPosCount));
               const pReb = stats.posRebound[pos][d] || 1.0;
-              const isPosPull = stats.lastDraw && stats.lastDraw.main[pos] === d ? 1.28 : 1.0;
-              const isPosSlide = stats.lastDraw && Math.abs(stats.lastDraw.main[pos] - d) === 1 ? 1.18 : 1.0;
+              const lastPosDigit = stats.lastDraw ? stats.lastDraw.main[pos] : -99;
+              const isPosPull = (lastPosDigit === d) ? 1.38 : 1.0;
+              const isPosSlide = isCircularWheelAdjacent(lastPosDigit, d) ? 1.22 : 1.0;
 
               let score = 1.0;
               if (model.mode === 'hybrid') {
@@ -2906,37 +2968,32 @@
               } else {
                 score = (1 + pRec * 0.32) * isPosSlide;
               }
-              score *= (0.74 + rng() * 0.52);
-              scoredPosDigits.push({ d, score });
+              scoredPosDigits.push({ d, weight: score });
             }
             if (scoredPosDigits.length === 0) {
-              scoredPosDigits.push({ d: axisList[0] ?? 0, score: 1.0 });
+              scoredPosDigits.push({ d: axisList[0] ?? 0, weight: 1.0 });
             }
-            scoredPosDigits.sort((a, b) => b.score - a.score);
-            posPools[pos] = scoredPosDigits.slice(0, Math.min(5, scoredPosDigits.length));
+            posPools[pos] = scoredPosDigits;
           });
 
           let bestPair = null;
           let bestPenalty = Infinity;
           const targetMiniSum = model.mode === 'harmony' ? stats.miniRecentMeanSum : stats.miniDynamicMeanSum;
 
-          for (let attempt = 0; attempt < 55; attempt++) {
-            let tens = posPools[1][Math.floor(rng() * posPools[1].length)].d;
-            let ones = posPools[2][Math.floor(rng() * posPools[2].length)].d;
+          for (let attempt = 0; attempt < 75; attempt++) {
+            let tens = weightedPick(posPools[1], rng).d;
+            let ones = weightedPick(posPools[2], rng).d;
 
             if (axisList.length > 0 && tens !== axisList[0] && ones !== axisList[0]) {
               if (rng() < 0.5) tens = axisList[0];
               else ones = axisList[0];
             }
 
-            if (tens === ones && rng() > 0.14 && posPools[2].length > 1) {
-              ones = posPools[2][(Math.floor(rng() * (posPools[2].length - 1)) + 1) % posPools[2].length].d;
-            }
-
             const miniSum = tens + ones;
             const consec = Math.abs(tens - ones) === 1 ? 1 : 0;
             const targetConsec = model.mode === 'hybrid' ? 1 : 0;
-            const penalty = Math.abs(miniSum - targetMiniSum) * 1.5 + Math.abs(consec - targetConsec) * 2.5;
+            const doublePenalty = (tens === ones) ? 2.2 : 0;
+            const penalty = Math.abs(miniSum - targetMiniSum) * 1.4 + Math.abs(consec - targetConsec) * 2.2 + doublePenalty;
 
             if (penalty < bestPenalty) {
               bestPenalty = penalty;
@@ -2953,7 +3010,7 @@
           const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』を下2桁に配置し、` : '';
 
           rationale = model.mode === 'hybrid'
-            ? `${axisPrefix}百の位を除外し、全${stats.totalCount}回の「十の位・一の位」専用出現周期と引っ張り相関・下2桁合計平均（${stats.miniDynamicMeanSum}）を融合したミニ本命。`
+            ? `${axisPrefix}百の位を除外し、全${stats.totalCount}回の「十の位・一の位」同桁風車バイアス（引っ張り・循環±1）と下2桁合計平均（${stats.miniDynamicMeanSum}）を融合したミニ本命。`
             : model.mode === 'rebound'
             ? `${axisPrefix}十の位・一の位それぞれの実測「平均出現間隔」を超過した下2桁リバウンド待機数字をピンポイント抽出したミニ反発狙い。`
             : `${axisPrefix}直近30回の十の位・一の位トレンドと下2桁合計移動平均（${stats.miniRecentMeanSum}）・奇偶比を最適補正したミニ王道バランス。`;
@@ -2970,81 +3027,102 @@
             learnedCount: stats.totalCount
           };
 
-        } else if (type === 'numbers3' || type === 'numbers4') {
+        } else if (isNumbersGame) {
+          // ナンバーズ3・4専用：風車盤・桁別独立＆3口役割分離エンジン（全10数字重み付き確率抽出＋自然重複評価）
           const axisList = isCustom ? [...cond.axis] : [];
           const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
           const expectedPosCount = stats.totalCount / 10;
 
-          const expectedDupGap = 1 / Math.max(0.15, stats.allDupRate);
-          const isDupOverdue = stats.drawsSinceLastDuplicate >= Math.floor(expectedDupGap) || stats.recentDupRate < stats.allDupRate * 0.85;
-          const dupBias = model.mode === 'rebound'
-            ? (isDupOverdue ? 0.65 : 0.35)
-            : model.mode === 'hybrid'
-            ? (type === 'numbers4' ? 0.52 : 0.34)
-            : (type === 'numbers4' ? 0.42 : 0.22);
-
-          const posPools = [];
+          const posWeights = [];
           for (let pos = 0; pos < cfg.pick; pos++) {
-            const scoredPosDigits = [];
+            const digitsArr = [];
+            const lastPosDigit = stats.lastDraw ? stats.lastDraw.main[pos] : -99;
+
             for (let d = 0; d <= 9; d++) {
               if (excludeSet.has(d)) continue;
               const pAll = stats.posFreqAll[pos][d] || 0;
               const pRec = stats.posFreqRecent[pos][d] || 0;
               const pGap = Math.max(0.25, 1 + (expectedPosCount - pAll) / Math.max(8, expectedPosCount));
               const pReb = stats.posRebound[pos][d] || 1.0;
-              const isPosPull = stats.lastDraw && stats.lastDraw.main[pos] === d ? 1.26 : 1.0;
-              const isPosSlide = stats.lastDraw && Math.abs(stats.lastDraw.main[pos] - d) === 1 ? 1.16 : 1.0;
 
-              let score = 1.0;
-              if (model.mode === 'hybrid') {
-                score = pGap * (1 + pRec * 0.25) * isPosPull * isPosSlide;
-              } else if (model.mode === 'rebound') {
-                score = Math.pow(Math.max(0.5, pReb), 1.45);
+              const isSamePosPull = (lastPosDigit === d) ? 1.38 : 1.0;
+              const isSamePosWheelAdj = isCircularWheelAdjacent(lastPosDigit, d) ? 1.22 : 1.0;
+
+              let w = 1.0;
+              if (model.mode === 'straight_wheel') {
+                // 第1推奨：同桁の風車盤バイアス（前回同桁引っ張り・循環±1）と桁別長期収束を最重視
+                w = pGap * (1 + pRec * 0.28) * isSamePosPull * isSamePosWheelAdj;
+              } else if (model.mode === 'box_harmony') {
+                // 第2推奨：全体出現頻度・直近30回トレンド重視（ボックス・セット網羅型）
+                const globalRec = stats.freqRecent[d] || 0;
+                w = (1 + globalRec * 0.14) * (1 + pRec * 0.22) * isSamePosWheelAdj;
               } else {
-                score = (1 + pRec * 0.3) * isPosSlide;
+                // 第3推奨：各桁の未出現スランプ限界突破（リバウンド穴狙い）
+                w = Math.pow(Math.max(0.45, pReb), 1.65) * pGap;
               }
-              score *= (0.75 + rng() * 0.5);
-              scoredPosDigits.push({ d, score });
+              digitsArr.push({ d, weight: w });
             }
-            if (scoredPosDigits.length === 0) {
-              scoredPosDigits.push({ d: axisList[0] ?? 0, score: 1.0 });
+
+            if (digitsArr.length === 0) {
+              digitsArr.push({ d: axisList[0] ?? 0, weight: 1.0 });
             }
-            scoredPosDigits.sort((a, b) => b.score - a.score);
-            posPools.push(scoredPosDigits.slice(0, Math.min(5, scoredPosDigits.length)));
+            posWeights.push(digitsArr);
           }
 
           let bestCombo = null;
           let bestPenalty = Infinity;
-          const targetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+          const targetSum = model.mode === 'box_harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
+          const expectedDupGap = 1 / Math.max(0.15, stats.allDupRate);
+          const isDupOverdue = stats.drawsSinceLastDuplicate >= Math.floor(expectedDupGap) || stats.recentDupRate < stats.allDupRate * 0.85;
 
-          for (let attempt = 0; attempt < 65; attempt++) {
+          // 上書き破壊を廃止し、全10数字の重み付きルーレット試行から自然な重複と合計値バランスを評価選定
+          for (let attempt = 0; attempt < 110; attempt++) {
             const temp = [];
             for (let pos = 0; pos < cfg.pick; pos++) {
-              const pool = posPools[pos];
-              temp.push(pool[Math.floor(rng() * pool.length)].d);
-            }
-            if (axisList.length > 0 && !temp.includes(axisList[0])) {
-              const targetPos = Math.floor(rng() * cfg.pick);
-              temp[targetPos] = axisList[0];
+              temp.push(weightedPick(posWeights[pos], rng).d);
             }
 
-            const wantDuplicate = rng() < dupBias;
-            if (wantDuplicate && new Set(temp).size === cfg.pick) {
-              const srcPos = Math.floor(rng() * cfg.pick);
-              let dstPos = (srcPos + 1 + Math.floor(rng() * (cfg.pick - 1))) % cfg.pick;
-              const pivotDigit = axisList.length > 0 ? axisList[0] : temp[srcPos];
-              if (axisList.length > 0 && temp[dstPos] === axisList[0] && temp.filter(x => x === axisList[0]).length === 1) {
-                dstPos = srcPos;
+            if (axisList.length > 0 && !temp.includes(axisList[0])) {
+              let bestAxisPos = 0;
+              let bestAxisScore = -1;
+              for (let pos = 0; pos < cfg.pick; pos++) {
+                const found = posWeights[pos].find(x => x.d === axisList[0]);
+                const sc = (found ? found.weight : 0.5) * (0.7 + rng() * 0.6);
+                if (sc > bestAxisScore) {
+                  bestAxisScore = sc;
+                  bestAxisPos = pos;
+                }
               }
-              temp[dstPos] = pivotDigit;
+              temp[bestAxisPos] = axisList[0];
             }
 
             const sum = temp.reduce((a, b) => a + b, 0);
             const consec = countConsecutivePairs(temp, false);
-            const hasDup = new Set(temp).size < cfg.pick;
-            const targetConsec = model.mode === 'hybrid' ? 1 : 0;
-            const dupPenalty = (wantDuplicate === hasDup) ? 0 : 2.8;
-            const penalty = Math.abs(sum - targetSum) * 1.4 + Math.abs(consec - targetConsec) * 3.2 + dupPenalty;
+            const uniqueLen = new Set(temp).size;
+            const dupCount = cfg.pick - uniqueLen;
+            const odds = temp.filter(x => x % 2 === 1).length;
+            const idealOdds = cfg.pick === 3 ? (attempt % 2 === 0 ? 2 : 1) : 2;
+
+            let dupPenalty = 0;
+            if (model.mode === 'box_harmony') {
+              // 第2推奨は実測重複周期（ダブル・トリプル）の到来度に合わせて自然に優遇
+              const wantDup = isDupOverdue || (type === 'numbers4');
+              if (wantDup && dupCount === 0) dupPenalty = 2.6;
+              if (dupCount >= 2 && type === 'numbers3') dupPenalty = 3.0;
+            } else if (model.mode === 'straight_wheel') {
+              // 第1推奨は重複過多（トリプル等）のみ軽く抑制しつつ桁別スコアを尊重
+              if (dupCount >= 2) dupPenalty = 2.5;
+            } else {
+              // 第3推奨は穴狙い（シングル高配当または長期未出現重複）
+              if (dupCount >= 2) dupPenalty = 2.0;
+            }
+
+            const targetConsec = model.mode === 'straight_wheel' ? 1 : 0;
+            const sumWeight = model.mode === 'rebound_sniper' ? 0.85 : 1.35;
+            const penalty = Math.abs(sum - targetSum) * sumWeight
+              + Math.abs(consec - targetConsec) * 2.4
+              + Math.abs(odds - idealOdds) * 1.1
+              + dupPenalty;
 
             if (penalty < bestPenalty) {
               bestPenalty = penalty;
@@ -3057,17 +3135,17 @@
           const uniqueLen = new Set(numbers).size;
           const dupCount = cfg.pick - uniqueLen;
           const dupLabel = dupCount >= 2 ? 'トリプル・重複構成' : (dupCount === 1 ? 'ダブル（同数字重複）構成' : 'オールシングル構成');
-          const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』を配置し、` : '';
+          const axisPrefix = axisList.length > 0 ? `軸数字『${axisList[0]}』を最適桁へ配置し、` : '';
 
-          rationale = model.mode === 'hybrid'
-            ? `${axisPrefix}全${stats.totalCount}回の「桁別出現周期」と実測重複率（${Math.round(stats.allDupRate * 100)}%）を融合した【${dupLabel}】の進化本命配列。`
-            : model.mode === 'rebound'
-            ? `${axisPrefix}各位の平均出現間隔超過数字に加え、重複未出現（${stats.drawsSinceLastDuplicate}回ぶり）周期を織り込んだ【${dupLabel}】の反発狙い配列。`
-            : `${axisPrefix}直近30回の桁別トレンドと合計値移動平均（${stats.recentMeanSum}）・奇偶比・連番（${consecCount}組）を補正した【${dupLabel}】配列。`;
+          rationale = model.mode === 'straight_wheel'
+            ? `${axisPrefix}他桁ノイズを排除した「同桁風車盤バイアス（前回同桁引っ張り・循環±1）」と全${stats.totalCount}回の桁別周期を融合した【${dupLabel}】のストレート本命。`
+            : model.mode === 'box_harmony'
+            ? `${axisPrefix}実測重複周期（発生率${Math.round(stats.allDupRate * 100)}%・${stats.drawsSinceLastDuplicate}回ぶり）と直近30回の合計値黄金比（${stats.recentMeanSum}）を重視した【${dupLabel}】のボックス・セット網羅型。`
+            : `${axisPrefix}各桁の「平均出現間隔」を大きく超過したスランプ限界数字をピンポイント抽出した【${dupLabel}】の高配当リバウンド狙い。`;
 
         } else {
           // Loto6, Loto7, MiniLoto
-          // 提案3：第1・第2推奨は王道の当選確率重視（ブーストなし）、第3推奨のみCO発生時に32以上優遇
+          const isMiniLoto = (type === 'miniloto');
           const axisList = isCustom ? [...cond.axis] : [];
           const excludeSet = isCustom ? new Set(cond.exclude) : new Set();
 
@@ -3080,18 +3158,23 @@
             const recCount = stats.freqRecent[n] || 0;
             const convergenceGap = Math.max(0.25, 1 + (expectedCount - allCount) / Math.max(10, expectedCount));
             const rebScore = stats.reboundRatio[n] || 1.0;
-            const isPull = stats.lastDraw && stats.lastDraw.main.includes(n) ? 1.30 : 1.0;
-            const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - n) === 1) ? 1.18 : 1.0;
+
+            const pullFactor = isMiniLoto ? 1.48 : 1.30;
+            const slideFactor = isMiniLoto ? 1.24 : 1.18;
+            const isPull = stats.lastDraw && stats.lastDraw.main.includes(n) ? pullFactor : 1.0;
+            const isSlide = stats.lastDraw && stats.lastDraw.main.some(x => Math.abs(x - n) === 1) ? slideFactor : 1.0;
 
             const coHighBoost = (useCoBoost && n >= 32) ? 1.26 : 1.0;
+            const alreadyUsedCount = isMiniLoto ? (miniLotoChosenTracker.get(n) || 0) : 0;
+            const diversityFactor = isMiniLoto ? Math.pow(0.62, alreadyUsedCount) : 1.0;
 
             let weight = 1.0;
             if (model.mode === 'hybrid') {
-              weight = convergenceGap * (1 + recCount * 0.25) * isPull * isSlide;
+              weight = convergenceGap * (1 + recCount * 0.25) * isPull * isSlide * diversityFactor;
             } else if (model.mode === 'rebound') {
-              weight = Math.pow(Math.max(0.5, rebScore), 1.45) * convergenceGap;
+              weight = Math.pow(Math.max(0.5, rebScore), 1.45) * convergenceGap * diversityFactor;
             } else {
-              weight = (1 + recCount * 0.22) * isSlide * coHighBoost;
+              weight = (1 + recCount * 0.22) * isSlide * coHighBoost * diversityFactor;
             }
             weight *= (0.72 + rng() * 0.56);
             scoredNums.push({ n, weight });
@@ -3105,7 +3188,7 @@
           const baseTargetSum = model.mode === 'harmony' ? stats.recentMeanSum : stats.dynamicMeanSum;
           const targetSum = useCoBoost ? baseTargetSum + 8 : baseTargetSum;
 
-          for (let attempt = 0; attempt < 70; attempt++) {
+          for (let attempt = 0; attempt < 75; attempt++) {
             const chosen = new Set(axisList);
             const shuffled = [...candidatePool];
             for (let i = shuffled.length - 1; i > 0; i--) {
@@ -3147,7 +3230,16 @@
             const targetConsec = model.mode === 'hybrid' ? 1 : (model.mode === 'rebound' ? 1 : 0);
             const consecPenalty = Math.abs(consec - targetConsec) * 1.1;
 
-            const totalPenalty = sumPenalty + oddPenalty + consecPenalty;
+            let overlapPenalty = 0;
+            if (isMiniLoto && mIdx > 0) {
+              arr.forEach(num => {
+                if (!axisList.includes(num)) {
+                  overlapPenalty += (miniLotoChosenTracker.get(num) || 0) * 0.85;
+                }
+              });
+            }
+
+            const totalPenalty = sumPenalty + oddPenalty + consecPenalty + overlapPenalty;
 
             if (totalPenalty < bestPenalty) {
               bestPenalty = totalPenalty;
@@ -3156,18 +3248,32 @@
           }
           numbers = bestSet;
 
+          if (isMiniLoto) {
+            numbers.forEach(num => {
+              miniLotoChosenTracker.set(num, (miniLotoChosenTracker.get(num) || 0) + 1);
+            });
+          }
+
           const consecCount = countConsecutivePairs(numbers, true);
           const pullMatches = stats.lastDraw
             ? numbers.filter(n => stats.lastDraw.main.includes(n)).length
             : 0;
 
-          rationale = model.mode === 'hybrid'
-            ? `【王道確率重視】全${stats.totalCount}回の長期出現率乖離に、直近の引っ張り（${pullMatches}個）・隣数字・連番（${consecCount}組）を純粋融合した進化本命構成。`
-            : model.mode === 'rebound'
-            ? `【王道確率重視】全${stats.totalCount}回の蓄積履歴から実測「平均出現間隔」を超過した限界突破（リバウンド待機）数字を純粋抽出した反発狙い構成。`
-            : useCoBoost
-            ? `【1等独り占め戦略】キャリーオーバー発生中のため、誕生日数字(1〜31)を避け32以上の高数字帯を優遇して配当期待値を最大化したスペシャル構成。`
-            : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りをリアルタイム補正して導出した最適バランス構成。`;
+          if (isMiniLoto) {
+            rationale = model.mode === 'hybrid'
+              ? `【31数字高密度特化】ミニロト特有の強いリピート率に合わせて前回引っ張り（${pullMatches}個）・隣数字・連番（${consecCount}組）を強化融合した本命構成。`
+              : model.mode === 'rebound'
+              ? `【周期リバウンド＆分散】全${stats.totalCount}回の平均出現間隔超過数字を軸にしつつ、第1推奨と被りすぎないポートフォリオ分散で的中網羅率を高めた構成。`
+              : `【トレンド黄金比＆網羅】直近30回の当選サム平均（${stats.recentMeanSum}）と奇偶バランスを整え、3口全体で31数字の出目を広くカバーする仕上げ構成。`;
+          } else {
+            rationale = model.mode === 'hybrid'
+              ? `【王道確率重視】全${stats.totalCount}回の長期出現率乖離に、直近の引っ張り（${pullMatches}個）・隣数字・連番（${consecCount}組）を純粋融合した進化本命構成。`
+              : model.mode === 'rebound'
+              ? `【王道確率重視】全${stats.totalCount}回の蓄積履歴から実測「平均出現間隔」を超過した限界突破（リバウンド待機）数字を純粋抽出した反発狙い構成。`
+              : useCoBoost
+              ? `【1等独り占め戦略】キャリーオーバー発生中のため、誕生日数字(1〜31)を避け32以上の高数字帯を優遇して配当期待値を最大化したスペシャル構成。`
+              : `直近30回の当選サム移動平均（${stats.recentMeanSum}）と奇偶黄金比の偏りをリアルタイム補正して導出した最適バランス構成。`;
+          }
         }
 
         const sumVal = numbers.reduce((a, b) => a + b, 0);
@@ -3196,7 +3302,6 @@
       const round = APP_STATE.selectedRound;
       const isTarget = round === targetRound;
 
-      // ロト6・ロト7のタブにキャリーオーバー発生時👑COバッジを表示
       ['loto6', 'loto7'].forEach(coType => {
         const badgeEl = document.getElementById(`tabCo_${coType}`);
         if (badgeEl) {
@@ -3406,20 +3511,22 @@
               </select>
             `;
           } else {
+            const defaultBet = idx === 0 ? 'ストレート' : 'ボックス';
             betTypeSelectHtml = `
               <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ3買い方">
-                <option value="ボックス">ボックス</option>
-                <option value="ストレート">ストレート</option>
+                <option value="ボックス" ${defaultBet === 'ボックス' ? 'selected' : ''}>ボックス</option>
+                <option value="ストレート" ${defaultBet === 'ストレート' ? 'selected' : ''}>ストレート</option>
                 <option value="セット">セット</option>
                 <option value="ミニ">ミニ</option>
               </select>
             `;
           }
         } else if (type === 'numbers4') {
+          const defaultBet = idx === 0 ? 'ストレート' : 'ボックス';
           betTypeSelectHtml = `
             <select class="bet-type-select" id="betSelect_${idx}" aria-label="ナンバーズ4買い方">
-              <option value="ボックス">ボックス</option>
-              <option value="ストレート">ストレート</option>
+              <option value="ボックス" ${defaultBet === 'ボックス' ? 'selected' : ''}>ボックス</option>
+              <option value="ストレート" ${defaultBet === 'ストレート' ? 'selected' : ''}>ストレート</option>
               <option value="セット">セット</option>
             </select>
           `;
