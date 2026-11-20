@@ -198,6 +198,7 @@
     }
 
     .lottery-tab {
+      position: relative;
       background: linear-gradient(180deg, #FBF0D3, #E9CE91);
       border: 1.5px solid #C59838;
       border-radius: var(--radius-md);
@@ -215,6 +216,44 @@
       line-height: 1.2;
       box-shadow: 0 3px 7px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.75);
       transition: all 0.15s ease;
+    }
+
+    .tab-co-badge {
+      display: none;
+      position: absolute;
+      top: -6px;
+      right: -4px;
+      background: linear-gradient(135deg, #B82929, #E5B94C 50%, #8B1E1E);
+      background-size: 200% 200%;
+      animation: coTabGlow 2.2s infinite ease-in-out;
+      color: #FFFDF5;
+      border: 1.2px solid #FFF2C2;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 1px 5px;
+      border-radius: 99px;
+      box-shadow: 0 2px 6px rgba(184, 41, 41, 0.75), 0 0 8px rgba(229, 185, 76, 0.85);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .tab-co-badge.visible {
+      display: inline-block;
+    }
+
+    @keyframes coTabGlow {
+      0%, 100% {
+        background-position: 0% 50%;
+        transform: scale(1);
+        box-shadow: 0 2px 6px rgba(184, 41, 41, 0.75), 0 0 6px rgba(229, 185, 76, 0.7);
+      }
+      50% {
+        background-position: 100% 50%;
+        transform: scale(1.07);
+        box-shadow: 0 2px 8px rgba(184, 41, 41, 0.9), 0 0 13px rgba(255, 232, 133, 1);
+      }
     }
 
     .lottery-tab .tab-draw-day {
@@ -327,6 +366,14 @@
     .round-tag.past {
       background: #4A3828;
       color: #F6DFAC;
+    }
+
+    .round-target-date {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #4A3520;
+      margin-top: 2px;
+      white-space: nowrap;
     }
 
     .latest-btn {
@@ -1464,9 +1511,52 @@
     }
 
     .ticket-status-badge.win {
-      background: var(--crimson);
+      background: linear-gradient(180deg, #B82929, #7D1717);
       color: #FFE9A8;
-      border: 1px solid var(--brass-bright);
+      border: 1.5px solid var(--brass-bright);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(139, 30, 30, 0.45);
+      transition: transform 0.12s ease, box-shadow 0.15s ease;
+    }
+
+    .ticket-status-badge.win:active {
+      transform: scale(0.95);
+    }
+
+    .prize-detail-drawer {
+      display: none;
+      background: linear-gradient(135deg, #FFF8E3, #F5E1A4);
+      border: 1.5px solid var(--brass-mid);
+      border-radius: 7px;
+      padding: 8px 10px;
+      margin-top: 6px;
+      margin-bottom: 4px;
+      color: var(--ink-dark);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .prize-detail-drawer.open {
+      display: block;
+      animation: prizePop 0.2s ease-out;
+    }
+
+    @keyframes prizePop {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .prize-amount-main {
+      font-family: 'Shippori Mincho', serif;
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--crimson);
+      margin-bottom: 2px;
+    }
+
+    .prize-amount-note {
+      font-size: 10.5px;
+      color: var(--ink-muted);
+      line-height: 1.4;
     }
 
     .ticket-status-badge.lose {
@@ -1779,10 +1869,12 @@
         <span class="tab-draw-day">毎週火曜 抽選</span>
       </button>
       <button type="button" class="lottery-tab" data-type="loto6">
+        <span class="tab-co-badge" id="tabCo_loto6">👑CO</span>
         <span>ロト6</span>
         <span class="tab-draw-day">月・木 抽選</span>
       </button>
       <button type="button" class="lottery-tab" data-type="loto7">
+        <span class="tab-co-badge" id="tabCo_loto7">👑CO</span>
         <span>ロト7</span>
         <span class="tab-draw-day">毎週金曜 抽選</span>
       </button>
@@ -1801,6 +1893,7 @@
           <div class="round-display">
             <div class="round-number" id="roundNumberText">第0000回</div>
             <span class="round-tag target" id="roundStatusTag">次回購入予測対象</span>
+            <div class="round-target-date" id="roundTargetDateText"></div>
           </div>
           <button type="button" class="step-btn" id="nextRoundBtn" disabled>次回 ▶</button>
         </div>
@@ -2105,6 +2198,16 @@
             break;
           case 'modal':
             this.playTone(520, 'sine', 0.09, 0, 0.07, 720);
+            break;
+          case 'fanfare':
+            // 華やかな祝福ファンファーレ（タ・タ・タ・ターン♪）
+            this.playTone(523.25, 'triangle', 0.13, 0.00, 0.09); // C5
+            this.playTone(659.25, 'triangle', 0.13, 0.12, 0.09); // E5
+            this.playTone(783.99, 'triangle', 0.13, 0.24, 0.10); // G5
+            this.playTone(1046.50, 'triangle', 0.55, 0.36, 0.12); // C6
+            this.playTone(523.25, 'sine', 0.55, 0.36, 0.08); // C5 和音
+            this.playTone(659.25, 'sine', 0.55, 0.36, 0.08); // E5 和音
+            this.playTone(783.99, 'sine', 0.55, 0.36, 0.08); // G5 和音
             break;
         }
       }
@@ -3093,6 +3196,15 @@
       const round = APP_STATE.selectedRound;
       const isTarget = round === targetRound;
 
+      // ロト6・ロト7のタブにキャリーオーバー発生時👑COバッジを表示
+      ['loto6', 'loto7'].forEach(coType => {
+        const badgeEl = document.getElementById(`tabCo_${coType}`);
+        if (badgeEl) {
+          const hasCo = (APP_STATE.carryoverInfo[coType]?.amount || 0) > 0;
+          badgeEl.classList.toggle('visible', hasCo);
+        }
+      });
+
       document.querySelectorAll('.lottery-tab').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.type === type);
       });
@@ -3108,12 +3220,17 @@
 
       document.getElementById('roundNumberText').textContent = `第${round}回`;
       const tagEl = document.getElementById('roundStatusTag');
+      const targetDateEl = document.getElementById('roundTargetDateText');
       if (isTarget) {
         tagEl.textContent = '次回購入予測対象';
         tagEl.className = 'round-tag target';
+        const targetDrawDate = computeDrawDateForRound(type, round);
+        targetDateEl.textContent = `📅 ${targetDrawDate} 抽選予定`;
+        targetDateEl.style.display = 'block';
       } else {
         tagEl.textContent = '過去回バックテスト検証';
         tagEl.className = 'round-tag past';
+        targetDateEl.style.display = 'none';
       }
 
       const history = APP_STATE.historyData[type] || [];
@@ -3843,7 +3960,7 @@
       const history = APP_STATE.historyData[ticket.type] || [];
       const official = history.find(d => d.round === ticket.round);
       if (!official) {
-        return { status: 'pending', label: '抽選待ち（未確定）', official: null };
+        return { status: 'pending', label: '抽選待ち（未確定）', official: null, prizeTitle: '', prizeAmount: '', prizeNote: '' };
       }
 
       const type = ticket.type;
@@ -3852,7 +3969,16 @@
         const isMini = type === 'numbers3' && ticket.numbers[1] === official.main[1] && ticket.numbers[2] === official.main[2];
 
         if (isMiniTicket) {
-          if (isMini) return { status: 'win', label: '🎉 ミニ当選（下2桁一致）！', official };
+          if (isMini) {
+            return {
+              status: 'win',
+              label: '🎉 ミニ当選（下2桁一致）！',
+              official,
+              prizeTitle: 'ナンバーズ3 ミニ当選',
+              prizeAmount: '約 9,000円（理論値）',
+              prizeNote: '※1口200円あたりの理論値です。実際の配当金は販売実績・当選口数により変動します。'
+            };
+          }
           return { status: 'lose', label: '落選（下2桁不一致）', official };
         }
 
@@ -3866,29 +3992,39 @@
         const isBox = sortedUser === sortedOff;
 
         const bt = ticket.betType;
+        const isN4 = type === 'numbers4';
+
+        const makeNWin = (title, amount) => ({
+          status: 'win',
+          label: `🎉 ${title}！`,
+          official,
+          prizeTitle: `${isN4 ? 'ナンバーズ4' : 'ナンバーズ3'} ${title}`,
+          prizeAmount: amount,
+          prizeNote: '※1口200円あたりの理論値です。ダブル・トリプル数字や当選口数により実際の配当は変動します。'
+        });
 
         if (bt === 'ストレート') {
-          if (isStraight) return { status: 'win', label: '🎉 ストレート当選！', official };
+          if (isStraight) return makeNWin('ストレート当選', isN4 ? '約 900,000円（理論値）' : '約 90,000円（理論値）');
           if (isBox) return { status: 'lose', label: '惜敗（ボックス一致／ストレート購入）', official };
           if (isMini) return { status: 'lose', label: '惜敗（下2桁一致／ストレート購入）', official };
           return { status: 'lose', label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（0桁一致）', official };
         }
 
         if (bt === 'ボックス') {
-          if (isStraight) return { status: 'win', label: '🎉 ボックス当選！（数字・並び完全一致）', official };
-          if (isBox) return { status: 'win', label: '🎉 ボックス当選！', official };
+          if (isStraight) return makeNWin('ボックス当選（完全一致）', isN4 ? '約 37,500円〜（理論値）' : '約 15,000円〜（理論値）');
+          if (isBox) return makeNWin('ボックス当選', isN4 ? '約 37,500円〜（理論値）' : '約 15,000円〜（理論値）');
           return { status: 'lose', label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（不一致）', official };
         }
 
         if (bt === 'セット') {
-          if (isStraight) return { status: 'win', label: '🎉 セット（ストレート）当選！', official };
-          if (isBox) return { status: 'win', label: '🎉 セット（ボックス）当選！', official };
+          if (isStraight) return makeNWin('セット（ストレート）当選', isN4 ? '約 468,700円（理論値）' : '約 52,500円（理論値）');
+          if (isBox) return makeNWin('セット（ボックス）当選', isN4 ? '約 18,700円〜（理論値）' : '約 7,500円〜（理論値）');
           return { status: 'lose', label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（不一致）', official };
         }
 
-        if (isStraight) return { status: 'win', label: '🎉 ストレート当選！', official };
-        if (isBox) return { status: 'win', label: '🎉 ボックス当選！', official };
-        if (isMini) return { status: 'win', label: '🎉 ミニ当選（下2桁）！', official };
+        if (isStraight) return makeNWin('ストレート当選', isN4 ? '約 900,000円（理論値）' : '約 90,000円（理論値）');
+        if (isBox) return makeNWin('ボックス当選', isN4 ? '約 37,500円〜（理論値）' : '約 15,000円〜（理論値）');
+        if (isMini) return makeNWin('ミニ当選（下2桁）', '約 9,000円（理論値）');
         return {
           status: 'lose',
           label: straightHits > 0 ? `落選（${straightHits}桁位置一致）` : '落選（0桁一致）',
@@ -3913,7 +4049,24 @@
           }
         });
         if (bingoLines > 0) {
-          return { status: 'win', label: `🎉 ${bingoLines}ライン ビンゴ当選！（${slotHits}マス一致）`, official };
+          const bingoPrizeMap = {
+            8: { tier: '1等（8ライン全成立）', amount: '約 5,550,000円（理論値・最高3,000万円）' },
+            6: { tier: '2等（6ライン成立）', amount: '約 300,000円（理論値）' },
+            5: { tier: '3等（5ライン成立）', amount: '約 45,000円（理論値）' },
+            4: { tier: '4等（4ライン成立）', amount: '約 18,200円（理論値）' },
+            3: { tier: '5等（3ライン成立）', amount: '約 2,500円（理論値）' },
+            2: { tier: '6等（2ライン成立）', amount: '約 700円（理論値）' },
+            1: { tier: '7等（1ライン成立）', amount: '200円（固定配当）' }
+          };
+          const info = bingoPrizeMap[bingoLines] || { tier: `${bingoLines}ライン成立`, amount: '約 200円〜（理論値）' };
+          return {
+            status: 'win',
+            label: `🎉 ${bingoLines}ライン ビンゴ当選！（${slotHits}マス一致）`,
+            official,
+            prizeTitle: `ビンゴ5 ${info.tier}`,
+            prizeAmount: info.amount,
+            prizeNote: '※1口200円あたりの理論値です。7等は原則200円、1〜6等は発売額と当選口数により変動します。'
+          };
         }
         return {
           status: 'lose',
@@ -3926,28 +4079,90 @@
       const bonusHits = (official.bonus || []).filter(b => ticket.numbers.includes(b)).length;
 
       let tierText = '';
+      let prizeTitle = '';
+      let prizeAmount = '';
+      let prizeNote = '';
+
       if (type === 'loto6') {
-        if (mainHits === 6) tierText = '🎉 1等当選！';
-        else if (mainHits === 5 && bonusHits >= 1) tierText = '🎉 2等当選！';
-        else if (mainHits === 5) tierText = '🎉 3等当選！';
-        else if (mainHits === 4) tierText = '🎉 4等当選！';
-        else if (mainHits === 3) tierText = '🎉 5等当選！';
+        prizeNote = '※1口200円あたりの理論値です。実際の当せん金は発売額と当せん口数により毎回変動します。';
+        if (mainHits === 6) {
+          tierText = '🎉 1等当選！';
+          prizeTitle = 'ロト6 1等（本数字6個一致）';
+          prizeAmount = '約 2億円（理論値・CO時最高6億円）';
+        } else if (mainHits === 5 && bonusHits >= 1) {
+          tierText = '🎉 2等当選！';
+          prizeTitle = 'ロト6 2等（本数字5個＋ボーナス1個）';
+          prizeAmount = '約 1,000万円（理論値）';
+        } else if (mainHits === 5) {
+          tierText = '🎉 3等当選！';
+          prizeTitle = 'ロト6 3等（本数字5個一致）';
+          prizeAmount = '約 300,000円（理論値）';
+        } else if (mainHits === 4) {
+          tierText = '🎉 4等当選！';
+          prizeTitle = 'ロト6 4等（本数字4個一致）';
+          prizeAmount = '約 6,800円（理論値）';
+        } else if (mainHits === 3) {
+          tierText = '🎉 5等当選！';
+          prizeTitle = 'ロト6 5等（本数字3個一致）';
+          prizeAmount = '1,000円（原則固定）';
+        }
       } else if (type === 'loto7') {
-        if (mainHits === 7) tierText = '🎉 1等当選！';
-        else if (mainHits === 6 && bonusHits >= 1) tierText = '🎉 2等当選！';
-        else if (mainHits === 6) tierText = '🎉 3等当選！';
-        else if (mainHits === 5) tierText = '🎉 4等当選！';
-        else if (mainHits === 4) tierText = '🎉 5等当選！';
-        else if (mainHits === 3 && bonusHits >= 1) tierText = '🎉 6等当選！';
+        prizeNote = '※1口300円あたりの理論値です。実際の当せん金は発売額と当せん口数により毎回変動します。';
+        if (mainHits === 7) {
+          tierText = '🎉 1等当選！';
+          prizeTitle = 'ロト7 1等（本数字7個一致）';
+          prizeAmount = '約 6億円（理論値・CO時最高10億円）';
+        } else if (mainHits === 6 && bonusHits >= 1) {
+          tierText = '🎉 2等当選！';
+          prizeTitle = 'ロト7 2等（本数字6個＋ボーナス1個）';
+          prizeAmount = '約 730万円（理論値）';
+        } else if (mainHits === 6) {
+          tierText = '🎉 3等当選！';
+          prizeTitle = 'ロト7 3等（本数字6個一致）';
+          prizeAmount = '約 73万円（理論値）';
+        } else if (mainHits === 5) {
+          tierText = '🎉 4等当選！';
+          prizeTitle = 'ロト7 4等（本数字5個一致）';
+          prizeAmount = '約 9,100円（理論値）';
+        } else if (mainHits === 4) {
+          tierText = '🎉 5等当選！';
+          prizeTitle = 'ロト7 5等（本数字4個一致）';
+          prizeAmount = '約 1,400円（理論値）';
+        } else if (mainHits === 3 && bonusHits >= 1) {
+          tierText = '🎉 6等当選！';
+          prizeTitle = 'ロト7 6等（本数字3個＋ボーナス1個）';
+          prizeAmount = '約 1,000円（理論値）';
+        }
       } else if (type === 'miniloto') {
-        if (mainHits === 5) tierText = '🎉 1等当選！';
-        else if (mainHits === 4 && bonusHits >= 1) tierText = '🎉 2等当選！';
-        else if (mainHits === 4) tierText = '🎉 3等当選！';
-        else if (mainHits === 3) tierText = '🎉 4等当選！';
+        prizeNote = '※1口200円あたりの理論値です。4等は原則1,000円、1〜3等は発売額と当せん口数により変動します。';
+        if (mainHits === 5) {
+          tierText = '🎉 1等当選！';
+          prizeTitle = 'ミニロト 1等（本数字5個一致）';
+          prizeAmount = '約 1,000万円（理論値）';
+        } else if (mainHits === 4 && bonusHits >= 1) {
+          tierText = '🎉 2等当選！';
+          prizeTitle = 'ミニロト 2等（本数字4個＋ボーナス1個）';
+          prizeAmount = '約 150,000円（理論値）';
+        } else if (mainHits === 4) {
+          tierText = '🎉 3等当選！';
+          prizeTitle = 'ミニロト 3等（本数字4個一致）';
+          prizeAmount = '約 10,000円（理論値）';
+        } else if (mainHits === 3) {
+          tierText = '🎉 4等当選！';
+          prizeTitle = 'ミニロト 4等（本数字3個一致）';
+          prizeAmount = '約 1,000円（原則固定）';
+        }
       }
 
       if (tierText) {
-        return { status: 'win', label: `${tierText}（本${mainHits}${bonusHits ? `+B${bonusHits}` : ''}）`, official };
+        return {
+          status: 'win',
+          label: `${tierText}（本${mainHits}${bonusHits ? `+B${bonusHits}` : ''}）`,
+          official,
+          prizeTitle,
+          prizeAmount,
+          prizeNote
+        };
       }
       return {
         status: 'lose',
@@ -3956,7 +4171,7 @@
       };
     }
 
-    function openLedgerModal() {
+    function openLedgerModal(playCelebration = false) {
       const body = document.getElementById('ledgerModalBody');
 
       let winCount = 0;
@@ -4160,12 +4375,26 @@
             ? `<span class="bet-mode-tag">${ticket.betType}</span>`
             : '';
 
+          const statusBadgeHtml = evalRes.status === 'win'
+            ? `<button type="button" class="ticket-status-badge win" data-prize-toggle="${ticket.id}" title="タップして当選金額目安を表示">${evalRes.label} 💰</button>`
+            : `<span class="ticket-status-badge ${evalRes.status}">${evalRes.label}</span>`;
+
+          const prizeDrawerHtml = evalRes.status === 'win'
+            ? `
+              <div class="prize-detail-drawer" id="prizeDrawer_${ticket.id}">
+                <div class="prize-amount-main">🏆 ${evalRes.prizeTitle}：${evalRes.prizeAmount}</div>
+                <div class="prize-amount-note">${evalRes.prizeNote}</div>
+              </div>
+            `
+            : '';
+
           return `
             <div class="ticket-item">
               <div class="ticket-top">
                 <span class="ticket-title">${ticket.typeName} 第${ticket.round}回（${ticket.rank}）${betTagHtml}</span>
-                <span class="ticket-status-badge ${evalRes.status}">${evalRes.label}</span>
+                ${statusBadgeHtml}
               </div>
+              ${prizeDrawerHtml}
               ${userVisualHtml}
               ${officialRefHtml}
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
@@ -4180,6 +4409,10 @@
       body.innerHTML = statsDashboardHtml + manualEntryHtml + filterRowHtml + backupSectionHtml + ticketsListHtml;
       bindLedgerModalEvents();
       document.getElementById('ledgerModal').classList.add('open');
+
+      if (playCelebration && winCount > 0) {
+        SOUND_FX.play('fanfare');
+      }
     }
 
     function bindLedgerModalEvents() {
@@ -4300,7 +4533,23 @@
           APP_STATE.tickets = APP_STATE.tickets.filter(t => t.id !== id);
           persistTickets();
           updateLedgerBadge();
-          openLedgerModal();
+          openLedgerModal(false);
+        });
+      });
+
+      body.querySelectorAll('[data-prize-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tid = btn.dataset.prizeToggle;
+          const drawer = document.getElementById(`prizeDrawer_${tid}`);
+          if (drawer) {
+            const willOpen = !drawer.classList.contains('open');
+            drawer.classList.toggle('open', willOpen);
+            if (willOpen) {
+              SOUND_FX.play('fanfare');
+            } else {
+              SOUND_FX.play('step');
+            }
+          }
         });
       });
     }
@@ -4470,8 +4719,11 @@
       openHistoryModal();
     });
     document.getElementById('openLedgerBtn').addEventListener('click', () => {
-      SOUND_FX.play('modal');
-      openLedgerModal();
+      const hasAnyWin = APP_STATE.tickets.some(t => evaluateTicketMatch(t).status === 'win');
+      if (!hasAnyWin) {
+        SOUND_FX.play('modal');
+      }
+      openLedgerModal(true);
     });
     document.getElementById('openCalendarBtn').addEventListener('click', () => {
       SOUND_FX.play('modal');
