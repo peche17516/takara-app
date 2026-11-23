@@ -2781,16 +2781,21 @@
                 APP_STATE.targetRounds[type] = latestPast + 1;
               }
             });
-            if (json.carryovers) {
-              ['loto6', 'loto7'].forEach(k => {
-                if (json.carryovers[k]) {
-                  const amt = Number(String(json.carryovers[k]).replace(/[^\d]/g, '')) || 0;
-                  if (amt > 0) {
-                    APP_STATE.carryoverInfo[k] = { amount: amt, short: formatShortCarryover(amt) };
-                  }
-                }
-              });
-            }
+            // クラウド同期時は初期ダミー値をリセットし、最新の0円も正確に反映する
+            ['loto6', 'loto7'].forEach(k => {
+              if (json.carryovers && Object.prototype.hasOwnProperty.call(json.carryovers, k)) {
+                const rawCo = json.carryovers[k];
+                const amt = typeof rawCo === 'number'
+                  ? rawCo
+                  : (Number(String(rawCo ?? '').replace(/[^\d]/g, '')) || 0);
+                APP_STATE.carryoverInfo[k] = { amount: amt, short: formatShortCarryover(amt) };
+              } else {
+                const list = APP_STATE.historyData[k] || [];
+                const latestPastDraw = list.length > 0 ? list[list.length - 1] : null;
+                const amt = latestPastDraw ? (latestPastDraw.carryover || 0) : 0;
+                APP_STATE.carryoverInfo[k] = { amount: amt, short: formatShortCarryover(amt) };
+              }
+            });
             APP_STATE.isCloudSynced = true;
           }
         }
