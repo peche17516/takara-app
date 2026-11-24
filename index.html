@@ -974,6 +974,13 @@
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
     }
 
+    /* 第4推奨（アンサンブル統合モデル）専用の豪華枠 */
+    .prediction-card.ensemble-card {
+      background: linear-gradient(180deg, #FFFDF5, #F5E6C4);
+      border: 2.5px solid var(--brass-bright);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55), 0 0 14px rgba(229, 185, 76, 0.35);
+    }
+
     .pred-card-header {
       display: flex;
       align-items: center;
@@ -1002,6 +1009,12 @@
       border-radius: 4px;
       font-family: 'Noto Sans JP', sans-serif;
       white-space: nowrap;
+    }
+
+    .rank-badge.ensemble-badge {
+      background: linear-gradient(135deg, #2A1608, #5C3A14);
+      color: #FFE9A8;
+      border: 1px solid var(--brass-bright);
     }
 
     .mode-pill {
@@ -1284,7 +1297,7 @@
       transform: scale(0.96);
     }
 
-    /* Bulk Save 3 Tickets Button */
+    /* Bulk Save Tickets Button */
     .bulk-save-wrap {
       margin-top: 2px;
     }
@@ -2103,7 +2116,7 @@
           <button type="button" class="preset-btn" id="btnPresetExcludeLast">🚫 前回当選を全外し<br>（全除外＆即再抽選）</button>
           <button type="button" class="preset-btn" id="btnPresetDroughtAxis">🎯 未出現TOPを<br>軸固定＆即再抽選</button>
         </div>
-        <div class="full-axis-notice" id="bingoFullAxisNotice">※全8枠を軸固定したため、3口すべて同一の確定目を表示しています</div>
+        <div class="full-axis-notice" id="bingoFullAxisNotice">※全8枠を軸固定したため、すべての推奨口で同一の確定目を表示しています</div>
         <div class="legend-row">
           <div class="legend-items">
             <span><i class="dot-axis"></i>1回タップ：軸固定</span>
@@ -2121,7 +2134,7 @@
       </div>
     </main>
 
-    <!-- 3 PREDICTION RESULT CARDS -->
+    <!-- PREDICTION RESULT CARDS -->
     <section class="results-section" id="resultsContainer"></section>
   </div>
 
@@ -2164,7 +2177,7 @@
   <script>
     /**
      * くじ日和（データ＆開運 宝くじ予想帳）
-     * 6種全アルゴリズム完全最適化版＋PWA専用アイコン＋継続買い入力＆誤戻る防止対応版
+     * 6種全アルゴリズム完全最適化版＋ロト3種・ビンゴ5第4推奨（アンサンブル統合モデル）搭載版
      */
     const LOTTERY_CONFIG = {
       numbers3: {
@@ -2295,7 +2308,6 @@
         } catch (e) {}
       }
 
-      // 初回ロード時およびユーザー操作時に履歴ガードをセット
       window.addEventListener('load', armHistoryGuard);
       ['pointerdown', 'touchstart', 'click'].forEach(evt => {
         window.addEventListener(evt, armHistoryGuard, { passive: true });
@@ -2304,7 +2316,6 @@
       window.addEventListener('popstate', () => {
         isArmed = false;
 
-        // 1. モーダルが開いている場合はまずモーダルを閉じる
         const openModals = document.querySelectorAll('.modal-backdrop.open');
         if (openModals.length > 0) {
           openModals.forEach(m => m.classList.remove('open'));
@@ -2313,7 +2324,6 @@
           return;
         }
 
-        // 2. 条件設定ドロワーが開いている場合は閉じる
         const drawer = document.getElementById('conditionDrawer');
         if (drawer && drawer.classList.contains('open')) {
           drawer.classList.remove('open');
@@ -2324,13 +2334,11 @@
           return;
         }
 
-        // 3. 2秒以内の連続「戻る」ならそのままブラウザバック（アプリ終了）を許可
         const now = Date.now();
         if (now - lastBackTime < 2200) {
           return;
         }
 
-        // 4. 1回目の「戻る」は履歴を押し戻して警告トーストを表示
         lastBackTime = now;
         armHistoryGuard();
         SOUND_FX.play('limit');
@@ -3084,7 +3092,7 @@
 
       const miniLotoChosenTracker = new Map();
 
-      return models.map((model, mIdx) => {
+      const baseRecs = models.map((model, mIdx) => {
         const useCoBoost = hasCarryover && model.mode === 'harmony';
         const seedStr = isCustom
           ? `custom_${type}_${isMiniSpecial ? 'mini_' : ''}${round}_m${mIdx}_off${customOffset}_${JSON.stringify(cond)}`
@@ -3245,6 +3253,7 @@
             title: model.title,
             numbers,
             isMiniSpecial: true,
+            isEnsemble: false,
             rationale,
             sumVal,
             oddEvenStr: `奇${oddCount}:偶${evenCount}`,
@@ -3552,6 +3561,7 @@
           title: model.title,
           numbers,
           isMiniSpecial: false,
+          isEnsemble: false,
           rationale,
           sumVal,
           oddEvenStr: `奇${oddCount}:偶${evenCount}`,
@@ -3559,6 +3569,154 @@
           learnedCount: stats.totalCount
         };
       });
+
+      /* ================= 第4推奨：アンサンブル統合モデル（ロト6・ロト7・ミニロト・ビンゴ5専用） ================= */
+      if (type === 'loto6' || type === 'loto7' || type === 'miniloto' || type === 'bingo5') {
+        const ensSeed = isCustom
+          ? `ensemble_custom_${type}_${round}_off${customOffset}_${JSON.stringify(cond)}`
+          : `ensemble_official_${type}_${round}_n${stats.totalCount}`;
+        const ensRng = mulberry32(stringToSeed(ensSeed));
+
+        if (type === 'bingo5') {
+          const bingoEnsNumbers = [];
+          let majoritySlots = 0;
+
+          for (let slot = 0; slot < 8; slot++) {
+            const fixedVal = isCustom ? cond.axis[slot] : null;
+            if (fixedVal !== null) {
+              bingoEnsNumbers.push(fixedVal);
+              continue;
+            }
+
+            const v1 = baseRecs[0].numbers[slot];
+            const v2 = baseRecs[1].numbers[slot];
+            const v3 = baseRecs[2].numbers[slot];
+
+            if (v1 === v2 || v1 === v3) {
+              bingoEnsNumbers.push(v1);
+              majoritySlots++;
+            } else if (v2 === v3) {
+              bingoEnsNumbers.push(v2);
+              majoritySlots++;
+            } else {
+              // 3票とも割れた場合は第1推奨（融合本命）を基本としつつ、サム値バランス微調整
+              const choices = [
+                { n: v1, weight: 1.55 },
+                { n: v2, weight: 1.15 },
+                { n: v3, weight: 1.05 }
+              ];
+              bingoEnsNumbers.push(weightedPick(choices, ensRng).n);
+            }
+          }
+
+          const sumVal = bingoEnsNumbers.reduce((a, b) => a + b, 0);
+          const oddCount = bingoEnsNumbers.filter(n => n % 2 === 1).length;
+          const evenCount = 8 - oddCount;
+          const consecCount = countConsecutivePairs(bingoEnsNumbers, false);
+
+          baseRecs.push({
+            rank: '第4推奨',
+            title: '【8枠多数決】ゴールデン・センター統合盤面',
+            numbers: bingoEnsNumbers,
+            isMiniSpecial: false,
+            isEnsemble: true,
+            rationale: `第1〜第3推奨の3盤面を枠ごとに投票集計し、複数モデルが一致したコンセンサス枠（${majoritySlots}枠合意）を最優先採用したアンサンブル統合盤面。`,
+            sumVal,
+            oddEvenStr: `奇${oddCount}:偶${evenCount}`,
+            consecStr: `連番${consecCount}組`,
+            learnedCount: stats.totalCount
+          });
+
+        } else {
+          // ロト6・ロト7・ミニロト：第1〜第3推奨の重複（コンセンサス）数字を軸に、候補プールからサム値黄金比で厳選統合
+          const axisList = isCustom ? [...cond.axis] : [];
+          const voteCountMap = new Map();
+          const modelPriorityBonus = new Map();
+
+          baseRecs.forEach((r, idx) => {
+            const pBonus = idx === 0 ? 1.35 : (idx === 1 ? 1.18 : 1.08);
+            r.numbers.forEach(num => {
+              voteCountMap.set(num, (voteCountMap.get(num) || 0) + 1);
+              modelPriorityBonus.set(num, (modelPriorityBonus.get(num) || 0) + pBonus);
+            });
+          });
+
+          // 2票以上獲得したコンセンサス数字を最優先コアとして抽出
+          const consensusNums = Array.from(voteCountMap.entries())
+            .filter(([num, cnt]) => cnt >= 2 && !axisList.includes(num))
+            .sort((a, b) => b[1] - a[1] || (modelPriorityBonus.get(b[0]) - modelPriorityBonus.get(a[0])))
+            .map(([num]) => num);
+
+          const lockedCore = [...axisList];
+          for (const cNum of consensusNums) {
+            if (lockedCore.length >= cfg.pick) break;
+            lockedCore.push(cNum);
+          }
+
+          // 残りの候補プール（第1〜第3推奨に登場した全数字）
+          const poolItems = Array.from(voteCountMap.keys())
+            .filter(num => !lockedCore.includes(num))
+            .map(num => ({
+              n: num,
+              weight: (modelPriorityBonus.get(num) || 1.0) * (1 + (stats.freqRecent[num] || 0) * 0.08)
+            }));
+
+          let bestEnsSet = null;
+          let bestEnsPenalty = Infinity;
+          const targetSum = stats.dynamicMeanSum;
+          const idealOdds = Math.round(cfg.pick / 2);
+
+          for (let attempt = 0; attempt < 90; attempt++) {
+            const chosen = new Set(lockedCore);
+            const tempPool = [...poolItems];
+
+            while (chosen.size < cfg.pick && tempPool.length > 0) {
+              const picked = weightedPick(tempPool, ensRng);
+              chosen.add(picked.n);
+              const rmIdx = tempPool.findIndex(x => x.n === picked.n);
+              if (rmIdx !== -1) tempPool.splice(rmIdx, 1);
+            }
+
+            const arr = Array.from(chosen).sort((a, b) => a - b);
+            const sum = arr.reduce((a, b) => a + b, 0);
+            const odds = arr.filter(x => x % 2 === 1).length;
+            const consec = countConsecutivePairs(arr, true);
+
+            const sumPenalty = Math.abs(sum - targetSum) / Math.max(8, targetSum * 0.16);
+            const oddPenalty = Math.abs(odds - idealOdds) * 0.85;
+            const targetConsec = (type === 'loto7') ? 2 : 1;
+            const consecPenalty = Math.abs(consec - targetConsec) * 0.9;
+
+            const totalPenalty = sumPenalty + oddPenalty + consecPenalty;
+            if (totalPenalty < bestEnsPenalty) {
+              bestEnsPenalty = totalPenalty;
+              bestEnsSet = arr;
+            }
+          }
+
+          const finalEnsArr = bestEnsSet || Array.from(new Set([...lockedCore, ...baseRecs[0].numbers])).slice(0, cfg.pick).sort((a, b) => a - b);
+          const sumVal = finalEnsArr.reduce((a, b) => a + b, 0);
+          const oddCount = finalEnsArr.filter(n => n % 2 === 1).length;
+          const evenCount = finalEnsArr.length - oddCount;
+          const consecCount = countConsecutivePairs(finalEnsArr, true);
+          const consensusUsedCount = finalEnsArr.filter(n => (voteCountMap.get(n) || 0) >= 2).length;
+
+          baseRecs.push({
+            rank: '第4推奨',
+            title: '【全モデル統合】コンセンサス厳選本命',
+            numbers: finalEnsArr,
+            isMiniSpecial: false,
+            isEnsemble: true,
+            rationale: `第1〜第3推奨の重複一致（コンセンサス数字${consensusUsedCount}個）を最優先軸に据え、縦割れ（買い目割れ）防止とサム中央値（${targetSum}）を両立させた統合厳選口。`,
+            sumVal,
+            oddEvenStr: `奇${oddCount}:偶${evenCount}`,
+            consecStr: `連番${consecCount}組`,
+            learnedCount: stats.totalCount
+          });
+        }
+      }
+
+      return baseRecs;
     }
 
     /* ================= RENDERING ================= */
@@ -3697,7 +3855,7 @@
 
       const isBingoAll8Fixed = type === 'bingo5' && APP_STATE.isCustomMode && cond.axis.every(x => x !== null);
       const bingoNoticeBanner = isBingoAll8Fixed
-        ? `<div style="background:#FFF7DF; border:1.5px solid #C5962B; color:#7C1111; font-size:11.5px; font-weight:800; padding:7px 10px; border-radius:8px; text-align:center;">※全8枠を軸固定したため、3口すべて同一の確定目を表示しています</div>`
+        ? `<div style="background:#FFF7DF; border:1.5px solid #C5962B; color:#7C1111; font-size:11.5px; font-weight:800; padding:7px 10px; border-radius:8px; text-align:center;">※全8枠を軸固定したため、すべての推奨口で同一の確定目を表示しています</div>`
         : '';
 
       const cardsHtml = recs.map((rec, idx) => {
@@ -3766,7 +3924,9 @@
 
         const modeBadge = APP_STATE.isCustomMode
           ? `<span class="mode-pill custom">条件反映・再抽選</span>`
-          : `<span class="mode-pill official">公式本命（全${rec.learnedCount}回学習）</span>`;
+          : (rec.isEnsemble
+            ? `<span class="mode-pill official">👑 3モデル統合・厳選</span>`
+            : `<span class="mode-pill official">公式本命（全${rec.learnedCount}回学習）</span>`);
 
         let betTypeSelectHtml = '';
         if (type === 'numbers3') {
@@ -3799,12 +3959,14 @@
         }
 
         const sumLabel = rec.isMiniSpecial ? `下2桁計: ${rec.sumVal}` : `サム値: ${rec.sumVal}`;
+        const cardCls = rec.isEnsemble ? 'prediction-card ensemble-card' : 'prediction-card';
+        const badgeCls = rec.isEnsemble ? 'rank-badge ensemble-badge' : 'rank-badge';
 
         return `
-          <article class="prediction-card">
+          <article class="${cardCls}">
             <div class="pred-card-header">
               <div class="pred-rank-title">
-                <span class="rank-badge">${rec.rank}</span>
+                <span class="${badgeCls}">${rec.rank}</span>
                 <span>${rec.title}</span>
               </div>
               ${modeBadge}
@@ -3826,9 +3988,10 @@
         `;
       }).join('');
 
+      const countLabel = recs.length;
       const bulkSaveHtml = `
         <div class="bulk-save-wrap">
-          <button type="button" class="bulk-save-btn" id="bulkSaveAllBtn">📋 推奨3口をまとめて購入台帳に記録</button>
+          <button type="button" class="bulk-save-btn" id="bulkSaveAllBtn">📋 推奨${countLabel}口をまとめて購入台帳に記録</button>
         </div>
       `;
 
@@ -3854,7 +4017,7 @@
             saveTicketToLedger(recs[i], betType, true);
           }
           const cfg = LOTTERY_CONFIG[type];
-          showToast(`📒 ${cfg.name} 第${APP_STATE.selectedRound}回の推奨3口をまとめて購入台帳に記録しました！`);
+          showToast(`📒 ${cfg.name} 第${APP_STATE.selectedRound}回の推奨${countLabel}口をまとめて購入台帳に記録しました！`);
         });
       }
     }
@@ -4836,7 +4999,6 @@
           if ((mType === 'numbers3' || mType === 'numbers4') && /^\d+$/.test(rawStr)) {
             parsedNums = rawStr.split('').map(Number);
           } else {
-            // スペース・カンマ・読点・中黒・ハイフン・ピリオドに対応
             parsedNums = rawStr.split(/[\s,、・\-.]+/).filter(Boolean).map(Number);
           }
 
@@ -4863,7 +5025,6 @@
             : null;
 
           const savedDateStr = formatDateWithWeekday(new Date());
-          // 後ろの回号からunshiftすることで、リスト上部に開始回号（一番若い回号）が先頭に来るように登録
           for (let offset = mRepeat - 1; offset >= 0; offset--) {
             const targetR = mRound + offset;
             const ticket = {
