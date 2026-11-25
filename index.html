@@ -2178,6 +2178,7 @@
     /**
      * くじ日和（データ＆開運 宝くじ予想帳）
      * 6種全アルゴリズム完全最適化版＋ロト3種・ビンゴ5第4推奨（アンサンブル統合モデル）搭載版
+     * 日付算出・過去日付正規化ロジック高精度化版
      */
     const LOTTERY_CONFIG = {
       numbers3: {
@@ -2187,7 +2188,7 @@
         maxAxis: 1, maxExclude: 3,
         sumIdealRange: [10, 17],
         drawDays: [1, 2, 3, 4, 5],
-        baseRound: 7065, baseDate: '2026-11-13'
+        baseRound: 7074, baseDate: '2026-11-26'
       },
       numbers4: {
         name: 'ナンバーズ4',
@@ -2196,7 +2197,7 @@
         maxAxis: 1, maxExclude: 3,
         sumIdealRange: [14, 22],
         drawDays: [1, 2, 3, 4, 5],
-        baseRound: 7065, baseDate: '2026-11-13'
+        baseRound: 7074, baseDate: '2026-11-26'
       },
       miniloto: {
         name: 'ミニロト',
@@ -2205,7 +2206,7 @@
         maxAxis: 1, maxExclude: 4,
         sumIdealRange: [65, 95],
         drawDays: [2],
-        baseRound: 1362, baseDate: '2026-11-10'
+        baseRound: 1412, baseDate: '2026-12-01'
       },
       loto6: {
         name: 'ロト6',
@@ -2214,7 +2215,7 @@
         maxAxis: 2, maxExclude: 5,
         sumIdealRange: [110, 155],
         drawDays: [1, 4],
-        baseRound: 2150, baseDate: '2026-11-12'
+        baseRound: 2154, baseDate: '2026-11-26'
       },
       loto7: {
         name: 'ロト7',
@@ -2223,7 +2224,7 @@
         maxAxis: 2, maxExclude: 5,
         sumIdealRange: [112, 158],
         drawDays: [5],
-        baseRound: 652, baseDate: '2026-11-13'
+        baseRound: 704, baseDate: '2026-11-27'
       },
       bingo5: {
         name: 'ビンゴ5',
@@ -2232,7 +2233,7 @@
         maxAxis: 1, maxExclude: 1,
         sumIdealRange: [145, 185],
         drawDays: [3],
-        baseRound: 446, baseDate: '2026-11-11'
+        baseRound: 498, baseDate: '2026-11-25'
       }
     };
 
@@ -2240,7 +2241,7 @@
       currentType: 'numbers3',
       n3MiniMode: false,
       targetRounds: {},
-      selectedRound: 7065,
+      selectedRound: 7074,
       isCustomMode: false,
       customSeedOffset: 0,
       soundEnabled: true,
@@ -2470,7 +2471,7 @@
       return items[items.length - 1];
     }
 
-    /* ================= DATE & WEEKDAY HELPERS ================= */
+    /* ================= DATE & WEEKDAY HELPERS (HIGH PRECISION) ================= */
     const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'];
 
     function formatDateWithWeekday(dateObj) {
@@ -2481,19 +2482,73 @@
       return `${y}/${m}/${d}(${w})`;
     }
 
+    /**
+     * 様々な日付フォーマット（"2026/11/24(火)", "2026-11-24", "2026年11月24日" など）を確実に Date オブジェクトへパースする
+     */
+    function parseFlexibleDate(dateStr) {
+      if (!dateStr || typeof dateStr !== 'string') return null;
+      const m = dateStr.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
+      if (!m) return null;
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      if (y < 1990 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+      const dt = new Date(y, mo - 1, d, 12, 0, 0);
+      return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    /**
+     * 年末年始の宝くじ抽せん休止期間（12月31日〜1月3日）判定
+     */
+    function isLottoNewYearHoliday(dateObj) {
+      const m = dateObj.getMonth() + 1;
+      const d = dateObj.getDate();
+      return (m === 12 && d === 31) || (m === 1 && d >= 1 && d <= 3);
+    }
+
+    /**
+     * 履歴データ内の有効な基準日付（最新の確定回）を優先的に取得し、
+     * そこから抽選曜日＋年末年始休止を考慮して任意の回号の抽選日を正確に算出する
+     */
     function computeDrawDateForRound(type, round) {
       const cfg = LOTTERY_CONFIG[type];
-      const base = new Date(cfg.baseDate + 'T12:00:00');
-      const diff = round - cfg.baseRound;
-      if (diff === 0) return formatDateWithWeekday(base);
+      const history = APP_STATE.historyData[type] || [];
+
+      // 1. まず該当回号が履歴にあり、有効な日付を持っていればそれを正規化して返す
+      const exactRecord = history.find(item => item.round === round);
+      if (exactRecord && exactRecord.date) {
+        const parsedExact = parseFlexibleDate(exactRecord.date);
+        if (parsedExact) {
+          return formatDateWithWeekday(parsedExact);
+        }
+      }
+
+      // 2. 基準点（アンカー）の決定：履歴の中で「有効な日付を持つ最も新しい回号」を探す
+      let anchorRound = cfg.baseRound;
+      let anchorDate = new Date(cfg.baseDate + 'T12:00:00');
+
+      for (let i = history.length - 1; i >= 0; i--) {
+        const parsed = parseFlexibleDate(history[i].date);
+        if (parsed) {
+          anchorRound = history[i].round;
+          anchorDate = parsed;
+          break;
+        }
+      }
+
+      const diff = round - anchorRound;
+      if (diff === 0) return formatDateWithWeekday(anchorDate);
 
       const step = diff > 0 ? 1 : -1;
       let remaining = Math.abs(diff);
-      const cursor = new Date(base);
+      const cursor = new Date(anchorDate);
 
-      while (remaining > 0) {
+      // 安全のため最大3650日（10年）ループ制限を設けて抽選曜日をステップ移動
+      let safety = 0;
+      while (remaining > 0 && safety < 3650) {
         cursor.setDate(cursor.getDate() + step);
-        if (cfg.drawDays.includes(cursor.getDay())) {
+        safety++;
+        if (cfg.drawDays.includes(cursor.getDay()) && !isLottoNewYearHoliday(cursor)) {
           remaining--;
         }
       }
@@ -2629,21 +2684,23 @@
 
       const dow = dateObj.getDay();
       const draws = [];
-      if (dow === 1) {
-        draws.push({ name: 'ロト6', major: true });
-        draws.push({ name: 'N3・N4', major: false });
-      } else if (dow === 2) {
-        draws.push({ name: 'ミニロト', major: true });
-        draws.push({ name: 'N3・N4', major: false });
-      } else if (dow === 3) {
-        draws.push({ name: 'ビンゴ5', major: true });
-        draws.push({ name: 'N3・N4', major: false });
-      } else if (dow === 4) {
-        draws.push({ name: 'ロト6', major: true });
-        draws.push({ name: 'N3・N4', major: false });
-      } else if (dow === 5) {
-        draws.push({ name: 'ロト7', major: true });
-        draws.push({ name: 'N3・N4', major: false });
+      if (!isLottoNewYearHoliday(dateObj)) {
+        if (dow === 1) {
+          draws.push({ name: 'ロト6', major: true });
+          draws.push({ name: 'N3・N4', major: false });
+        } else if (dow === 2) {
+          draws.push({ name: 'ミニロト', major: true });
+          draws.push({ name: 'N3・N4', major: false });
+        } else if (dow === 3) {
+          draws.push({ name: 'ビンゴ5', major: true });
+          draws.push({ name: 'N3・N4', major: false });
+        } else if (dow === 4) {
+          draws.push({ name: 'ロト6', major: true });
+          draws.push({ name: 'N3・N4', major: false });
+        } else if (dow === 5) {
+          draws.push({ name: 'ロト7', major: true });
+          draws.push({ name: 'N3・N4', major: false });
+        }
       }
 
       return {
@@ -2774,9 +2831,10 @@
                   const coNumeric = item.carryover && typeof item.carryover === 'number'
                     ? item.carryover
                     : Number(String(coExactStr).replace(/[^\d]/g, '')) || 0;
+                  const parsedDt = parseFlexibleDate(item.date);
                   return {
                     round: Number(item.round),
-                    date: item.date || computeDrawDateForRound(type, Number(item.round)),
+                    date: parsedDt ? formatDateWithWeekday(parsedDt) : '',
                     main: rawNums.map(Number),
                     bonus: Array.isArray(item.bonus) ? item.bonus.map(Number) : [],
                     carryover: coNumeric,
@@ -2784,7 +2842,14 @@
                   };
                 }).sort((a, b) => a.round - b.round);
 
+                // まず正規化配列をセットした上で、日付が欠損しているレコードを前後の有効な実データ日付から高精度補完
                 APP_STATE.historyData[type] = normalized;
+                normalized.forEach(item => {
+                  if (!item.date) {
+                    item.date = computeDrawDateForRound(type, item.round);
+                  }
+                });
+
                 const latestPast = normalized[normalized.length - 1].round;
                 APP_STATE.targetRounds[type] = latestPast + 1;
               }
@@ -3599,7 +3664,6 @@
               bingoEnsNumbers.push(v2);
               majoritySlots++;
             } else {
-              // 3票とも割れた場合は第1推奨（融合本命）を基本としつつ、サム値バランス微調整
               const choices = [
                 { n: v1, weight: 1.55 },
                 { n: v2, weight: 1.15 },
@@ -3628,7 +3692,6 @@
           });
 
         } else {
-          // ロト6・ロト7・ミニロト：第1〜第3推奨の重複（コンセンサス）数字を軸に、候補プールからサム値黄金比で厳選統合
           const axisList = isCustom ? [...cond.axis] : [];
           const voteCountMap = new Map();
           const modelPriorityBonus = new Map();
@@ -3641,7 +3704,6 @@
             });
           });
 
-          // 2票以上獲得したコンセンサス数字を最優先コアとして抽出
           const consensusNums = Array.from(voteCountMap.entries())
             .filter(([num, cnt]) => cnt >= 2 && !axisList.includes(num))
             .sort((a, b) => b[1] - a[1] || (modelPriorityBonus.get(b[0]) - modelPriorityBonus.get(a[0])))
@@ -3653,7 +3715,6 @@
             lockedCore.push(cNum);
           }
 
-          // 残りの候補プール（第1〜第3推奨に登場した全数字）
           const poolItems = Array.from(voteCountMap.keys())
             .filter(num => !lockedCore.includes(num))
             .map(num => ({
@@ -3788,7 +3849,8 @@
         if (pastDrawObj) {
           pastBanner.style.display = 'block';
           document.getElementById('pastBannerTitle').textContent = `🏛 第${round}回 公式確定当選番号`;
-          document.getElementById('pastBannerDate').textContent = `📅 ${pastDrawObj.date}`;
+          const displayPastDate = pastDrawObj.date || computeDrawDateForRound(type, round);
+          document.getElementById('pastBannerDate').textContent = `📅 ${displayPastDate}`;
 
           const coExactEl = document.getElementById('pastBannerCarryover');
           if ((type === 'loto6' || type === 'loto7') && pastDrawObj.carryover > 0) {
@@ -4364,13 +4426,14 @@
         const coBadge = ((type === 'loto6' || type === 'loto7') && item.carryover > 0)
           ? `<span class="co-mini-badge">👑 CO ${item.carryoverShort}</span>`
           : '';
+        const dateText = item.date || computeDrawDateForRound(type, item.round);
 
         return `
           <div class="history-item">
             <div>
               <div class="history-meta">
                 <span class="history-round">第${item.round}回</span>
-                <span class="history-date">📅 ${item.date}</span>
+                <span class="history-date">📅 ${dateText}</span>
                 ${coBadge}
               </div>
               ${numsDisplay}
