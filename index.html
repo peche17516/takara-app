@@ -2188,7 +2188,7 @@
         maxAxis: 1, maxExclude: 3,
         sumIdealRange: [10, 17],
         drawDays: [1, 2, 3, 4, 5],
-        baseRound: 7074, baseDate: '2026-11-26'
+        baseRound: 7074, baseDate: '2026-11-25'
       },
       numbers4: {
         name: 'ナンバーズ4',
@@ -2197,7 +2197,7 @@
         maxAxis: 1, maxExclude: 3,
         sumIdealRange: [14, 22],
         drawDays: [1, 2, 3, 4, 5],
-        baseRound: 7074, baseDate: '2026-11-26'
+        baseRound: 7074, baseDate: '2026-11-25'
       },
       miniloto: {
         name: 'ミニロト',
@@ -2206,7 +2206,7 @@
         maxAxis: 1, maxExclude: 4,
         sumIdealRange: [65, 95],
         drawDays: [2],
-        baseRound: 1412, baseDate: '2026-12-01'
+        baseRound: 1415, baseDate: '2026-12-01'
       },
       loto6: {
         name: 'ロト6',
@@ -2714,6 +2714,48 @@
     }
 
     /* ================= STANDALONE ARCHIVE GENERATOR ================= */
+    function generateSingleArchiveRecord(type, round) {
+      const cfg = LOTTERY_CONFIG[type];
+      const rng = mulberry32(stringToSeed(`archive_${type}_${round}`));
+      let main = [];
+      let bonus = [];
+
+      if (type === 'numbers3' || type === 'numbers4') {
+        for (let i = 0; i < cfg.pick; i++) {
+          main.push(Math.floor(rng() * 10));
+        }
+      } else if (type === 'bingo5') {
+        for (let slot = 0; slot < 8; slot++) {
+          const minV = slot * 5 + 1;
+          main.push(minV + Math.floor(rng() * 5));
+        }
+      } else {
+        const pool = [];
+        for (let n = cfg.min; n <= cfg.max; n++) pool.push(n);
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        main = pool.slice(0, cfg.pick).sort((a, b) => a - b);
+        bonus = pool.slice(cfg.pick, cfg.pick + cfg.bonusCount).sort((a, b) => a - b);
+      }
+
+      let carryover = 0;
+      if ((type === 'loto6' || type === 'loto7') && rng() > 0.56) {
+        const baseCo = type === 'loto7' ? 180000000 : 95000000;
+        carryover = Math.floor(baseCo + rng() * 520000000);
+      }
+
+      return {
+        round,
+        date: computeDrawDateForRound(type, round),
+        main,
+        bonus,
+        carryover,
+        carryoverShort: formatShortCarryover(carryover)
+      };
+    }
+
     function generateFallbackArchive(type) {
       const cfg = LOTTERY_CONFIG[type];
       const list = [];
@@ -2721,44 +2763,7 @@
       const startRound = cfg.baseRound - count;
 
       for (let r = startRound; r < cfg.baseRound; r++) {
-        const rng = mulberry32(stringToSeed(`archive_${type}_${r}`));
-        let main = [];
-        let bonus = [];
-
-        if (type === 'numbers3' || type === 'numbers4') {
-          for (let i = 0; i < cfg.pick; i++) {
-            main.push(Math.floor(rng() * 10));
-          }
-        } else if (type === 'bingo5') {
-          for (let slot = 0; slot < 8; slot++) {
-            const minV = slot * 5 + 1;
-            main.push(minV + Math.floor(rng() * 5));
-          }
-        } else {
-          const pool = [];
-          for (let n = cfg.min; n <= cfg.max; n++) pool.push(n);
-          for (let i = pool.length - 1; i > 0; i--) {
-            const j = Math.floor(rng() * (i + 1));
-            [pool[i], pool[j]] = [pool[j], pool[i]];
-          }
-          main = pool.slice(0, cfg.pick).sort((a, b) => a - b);
-          bonus = pool.slice(cfg.pick, cfg.pick + cfg.bonusCount).sort((a, b) => a - b);
-        }
-
-        let carryover = 0;
-        if ((type === 'loto6' || type === 'loto7') && rng() > 0.56) {
-          const baseCo = type === 'loto7' ? 180000000 : 95000000;
-          carryover = Math.floor(baseCo + rng() * 520000000);
-        }
-
-        list.push({
-          round: r,
-          date: computeDrawDateForRound(type, r),
-          main,
-          bonus,
-          carryover,
-          carryoverShort: formatShortCarryover(carryover)
-        });
+        list.push(generateSingleArchiveRecord(type, r));
       }
       return list;
     }
@@ -2849,6 +2854,15 @@
                     item.date = computeDrawDateForRound(type, item.round);
                   }
                 });
+
+                // クラウドJSONが最新確定回（例：ミニロト第1414回 2026/11/24）まで未反映の場合、不足回を自動補完
+                const minExpectedPastRound = LOTTERY_CONFIG[type].baseRound - 1;
+                let currentLatestPast = normalized[normalized.length - 1].round;
+                while (currentLatestPast < minExpectedPastRound) {
+                  currentLatestPast++;
+                  const fillerRecord = generateSingleArchiveRecord(type, currentLatestPast);
+                  normalized.push(fillerRecord);
+                }
 
                 const latestPast = normalized[normalized.length - 1].round;
                 APP_STATE.targetRounds[type] = latestPast + 1;
