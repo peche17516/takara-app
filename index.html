@@ -1031,6 +1031,12 @@
       border: 1px solid var(--brass-mid);
     }
 
+    .mode-pill.snapshot {
+      background: #1E5631;
+      color: #E6FFED;
+      border: 1px solid #76C893;
+    }
+
     .mode-pill.custom {
       background: var(--crimson);
       color: #FFF;
@@ -2178,7 +2184,7 @@
     /**
      * くじ日和（データ＆開運 宝くじ予想帳）
      * 6種全アルゴリズム完全最適化版＋ロト3種・ビンゴ5第4推奨（アンサンブル統合モデル）搭載版
-     * 日付算出・過去日付正規化ロジック高精度化版
+     * 日付算出・過去日付正規化ロジック高精度化 ＋ 公式本命スナップショット完全固定化版
      */
     const LOTTERY_CONFIG = {
       numbers3: {
@@ -2255,9 +2261,10 @@
       },
       historyData: {},
       carryoverInfo: {
-        loto6: { amount: 284512600, short: '2.8億' },
-        loto7: { amount: 642185400, short: '6.4億' }
+        loto6: { amount: 0, short: '' },
+        loto7: { amount: 0, short: '' }
       },
+      officialSnapshots: {},
       tickets: [],
       ledgerFilterType: 'ALL',
       ledgerFilterStatus: 'ALL',
@@ -2265,6 +2272,33 @@
     };
 
     const SESSION_STORAGE_KEY = 'kujibiyori_ui_state_v1';
+    const SNAPSHOT_STORAGE_KEY = 'kujibiyori_official_snapshots_v1';
+
+    function loadOfficialSnapshots() {
+      try {
+        const raw = localStorage.getItem(SNAPSHOT_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            APP_STATE.officialSnapshots = parsed;
+          }
+        }
+      } catch (e) {
+        APP_STATE.officialSnapshots = {};
+      }
+    }
+
+    function saveOfficialSnapshot(snapshotKey, recs) {
+      try {
+        APP_STATE.officialSnapshots[snapshotKey] = recs;
+        // 容量肥大化を防ぐため直近120件のみ保持
+        const keys = Object.keys(APP_STATE.officialSnapshots);
+        if (keys.length > 120) {
+          delete APP_STATE.officialSnapshots[keys[0]];
+        }
+        localStorage.setItem(SNAPSHOT_STORAGE_KEY, JSON.stringify(APP_STATE.officialSnapshots));
+      } catch (e) {}
+    }
 
     function saveSessionState() {
       try {
@@ -2482,9 +2516,6 @@
       return `${y}/${m}/${d}(${w})`;
     }
 
-    /**
-     * 様々な日付フォーマット（"2026/11/24(火)", "2026-11-24", "2026年11月24日" など）を確実に Date オブジェクトへパースする
-     */
     function parseFlexibleDate(dateStr) {
       if (!dateStr || typeof dateStr !== 'string') return null;
       const m = dateStr.match(/(\d{4})[\/\-年](\d{1,2})[\/\-月](\d{1,2})/);
@@ -2497,24 +2528,16 @@
       return isNaN(dt.getTime()) ? null : dt;
     }
 
-    /**
-     * 年末年始の宝くじ抽せん休止期間（12月31日〜1月3日）判定
-     */
     function isLottoNewYearHoliday(dateObj) {
       const m = dateObj.getMonth() + 1;
       const d = dateObj.getDate();
       return (m === 12 && d === 31) || (m === 1 && d >= 1 && d <= 3);
     }
 
-    /**
-     * 履歴データ内の有効な基準日付（最新の確定回）を優先的に取得し、
-     * そこから抽選曜日＋年末年始休止を考慮して任意の回号の抽選日を正確に算出する
-     */
     function computeDrawDateForRound(type, round) {
       const cfg = LOTTERY_CONFIG[type];
       const history = APP_STATE.historyData[type] || [];
 
-      // 1. まず該当回号が履歴にあり、有効な日付を持っていればそれを正規化して返す
       const exactRecord = history.find(item => item.round === round);
       if (exactRecord && exactRecord.date) {
         const parsedExact = parseFlexibleDate(exactRecord.date);
@@ -2523,7 +2546,6 @@
         }
       }
 
-      // 2. 基準点（アンカー）の決定：履歴の中で「有効な日付を持つ最も新しい回号」を探す
       let anchorRound = cfg.baseRound;
       let anchorDate = new Date(cfg.baseDate + 'T12:00:00');
 
@@ -2543,7 +2565,6 @@
       let remaining = Math.abs(diff);
       const cursor = new Date(anchorDate);
 
-      // 安全のため最大3650日（10年）ループ制限を設けて抽選曜日をステップ移動
       let safety = 0;
       while (remaining > 0 && safety < 3650) {
         cursor.setDate(cursor.getDate() + step);
@@ -2770,6 +2791,8 @@
 
     /* ================= CLOUD SYNC & STORAGE ================= */
     async function initializeData() {
+      loadOfficialSnapshots();
+
       try {
         const savedTickets = localStorage.getItem('lottery_pred_tickets_v2');
         if (savedTickets) {
@@ -2821,6 +2844,13 @@
         APP_STATE.historyData[type] = generateFallbackArchive(type);
         APP_STATE.targetRounds[type] = LOTTERY_CONFIG[type].baseRound;
       });
+      // スタンドアロン時は最新過去回のCO状態を反映
+      ['loto6', 'loto7'].forEach(k => {
+        const list = APP_STATE.historyData[k] || [];
+        const latestPastDraw = list.length > 0 ? list[list.length - 1] : null;
+        const amt = latestPastDraw ? (latestPastDraw.carryover || 0) : 0;
+        APP_STATE.carryoverInfo[k] = { amount: amt, short: formatShortCarryover(amt) };
+      });
 
       try {
         const resp = await fetch('./lottery_history.json?v=' + Date.now(), { cache: 'no-store' });
@@ -2847,7 +2877,6 @@
                   };
                 }).sort((a, b) => a.round - b.round);
 
-                // まず正規化配列をセットした上で、日付が欠損しているレコードを前後の有効な実データ日付から高精度補完
                 APP_STATE.historyData[type] = normalized;
                 normalized.forEach(item => {
                   if (!item.date) {
@@ -2855,7 +2884,6 @@
                   }
                 });
 
-                // クラウドJSONが最新確定回（例：ミニロト第1414回 2026/11/24）まで未反映の場合、不足回を自動補完
                 const minExpectedPastRound = LOTTERY_CONFIG[type].baseRound - 1;
                 let currentLatestPast = normalized[normalized.length - 1].round;
                 while (currentLatestPast < minExpectedPastRound) {
@@ -2868,7 +2896,7 @@
                 APP_STATE.targetRounds[type] = latestPast + 1;
               }
             });
-            // クラウド同期時は初期ダミー値をリセットし、最新の0円も正確に反映する
+
             ['loto6', 'loto7'].forEach(k => {
               if (json.carryovers && Object.prototype.hasOwnProperty.call(json.carryovers, k)) {
                 const rawCo = json.carryovers[k];
@@ -3094,21 +3122,52 @@
       };
     }
 
+    /**
+     * 指定された回号（round）の抽選時点における「繰越キャリーオーバー有無」を厳密に判定する
+     * ・次回購入予測対象（targetRound）の場合：現在の carryoverInfo[type].amount > 0
+     * ・過去回（round < targetRound）の場合：直前回（round - 1）の抽選結果で発生した繰越金（prevDraw.carryover）を参照し、
+     *   万が一データ未記載の場合は当該回の carryover もフォールバック確認する
+     */
+    function resolveCarryoverForRound(type, round) {
+      if (type !== 'loto6' && type !== 'loto7') return false;
+      const isTarget = round === APP_STATE.targetRounds[type];
+      if (isTarget) {
+        return (APP_STATE.carryoverInfo[type]?.amount || 0) > 0;
+      }
+      const history = APP_STATE.historyData[type] || [];
+      const prevDraw = history.find(d => d.round === round - 1);
+      if (prevDraw && typeof prevDraw.carryover === 'number' && prevDraw.carryover > 0) {
+        return true;
+      }
+      const thisDraw = history.find(d => d.round === round);
+      if (thisDraw && typeof thisDraw.carryover === 'number' && thisDraw.carryover > 0) {
+        return true;
+      }
+      return false;
+    }
+
     function generateThreeRecommendations(type, round, isCustom, customOffset) {
       const cfg = LOTTERY_CONFIG[type];
+      const isMiniSpecial = (type === 'numbers3' && APP_STATE.n3MiniMode);
+      const isTarget = round === APP_STATE.targetRounds[type];
+      const snapshotKey = `${type}_${isMiniSpecial ? 'mini_' : ''}${round}`;
+
+      // 公式本命モード（!isCustom）の場合、保存済みスナップショットがあれば最優先で復元（購入時と100%完全一致を保証）
+      if (!isCustom && APP_STATE.officialSnapshots[snapshotKey]) {
+        const savedList = APP_STATE.officialSnapshots[snapshotKey];
+        if (Array.isArray(savedList) && savedList.length > 0) {
+          return savedList.map(item => ({
+            ...item,
+            numbers: [...item.numbers],
+            isFromSnapshot: true
+          }));
+        }
+      }
+
       const stats = analyzeCumulativeStats(type, round);
       const cond = APP_STATE.conditions[type];
-      const isMiniSpecial = (type === 'numbers3' && APP_STATE.n3MiniMode);
       const isNumbersGame = (type === 'numbers3' || type === 'numbers4') && !isMiniSpecial;
-
-      const isTarget = round === APP_STATE.targetRounds[type];
-      const history = APP_STATE.historyData[type] || [];
-      const pastDrawObj = !isTarget ? history.find(d => d.round === round) : null;
-      const hasCarryover = (type === 'loto6' || type === 'loto7') && (
-        isTarget
-          ? (APP_STATE.carryoverInfo[type]?.amount > 0)
-          : (pastDrawObj && pastDrawObj.carryover > 0)
-      );
+      const hasCarryover = resolveCarryoverForRound(type, round);
 
       let models = [];
       if (isNumbersGame) {
@@ -3653,7 +3712,7 @@
       if (type === 'loto6' || type === 'loto7' || type === 'miniloto' || type === 'bingo5') {
         const ensSeed = isCustom
           ? `ensemble_custom_${type}_${round}_off${customOffset}_${JSON.stringify(cond)}`
-          : `ensemble_official_${type}_${round}_n${stats.totalCount}`;
+          : `ensemble_official_${type}_${round}_n${stats.totalCount}_co${hasCarryover ? 1 : 0}`;
         const ensRng = mulberry32(stringToSeed(ensSeed));
 
         if (type === 'bingo5') {
@@ -3791,6 +3850,12 @@
         }
       }
 
+      // 次回購入予測対象（isTarget）の公式本命を初めて表示した際、スナップショットとして端末に永続保存する
+      // これにより抽選終了後に過去回として振り返った際も、購入時に見た公式本命と100%同一の買い目が保持される
+      if (!isCustom && isTarget && stats.totalCount > 0) {
+        saveOfficialSnapshot(snapshotKey, baseRecs);
+      }
+
       return baseRecs;
     }
 
@@ -3869,7 +3934,7 @@
           const coExactEl = document.getElementById('pastBannerCarryover');
           if ((type === 'loto6' || type === 'loto7') && pastDrawObj.carryover > 0) {
             coExactEl.style.display = 'block';
-            coExactEl.textContent = `👑 キャリーオーバー ${pastDrawObj.carryover.toLocaleString()}円`;
+            coExactEl.textContent = `👑 次回へ繰越CO ${pastDrawObj.carryover.toLocaleString()}円`;
           } else {
             coExactEl.style.display = 'none';
           }
@@ -4000,9 +4065,11 @@
 
         const modeBadge = APP_STATE.isCustomMode
           ? `<span class="mode-pill custom">条件反映・再抽選</span>`
-          : (rec.isEnsemble
-            ? `<span class="mode-pill official">👑 3モデル統合・厳選</span>`
-            : `<span class="mode-pill official">公式本命（全${rec.learnedCount}回学習）</span>`);
+          : (pastDrawObj && rec.isFromSnapshot
+            ? `<span class="mode-pill snapshot">📌 予測記録固定（全${rec.learnedCount}回）</span>`
+            : (rec.isEnsemble
+              ? `<span class="mode-pill official">👑 3モデル統合・厳選</span>`
+              : `<span class="mode-pill official">公式本命（全${rec.learnedCount}回学習）</span>`));
 
         let betTypeSelectHtml = '';
         if (type === 'numbers3') {
